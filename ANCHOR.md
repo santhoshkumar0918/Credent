@@ -4,13 +4,23 @@
 > AGENTS.md. It answers "where are we right now" and is updated at the
 > end of every work session so a fresh agent can resume from it alone.
 
-**Last updated:** 2026-10-06 — workflow scaffolding landed: AGENTS.md
-routing + 8 subagents + 11 skills under `.opencode/`. No product code
-exists yet; contracts/, indexer/, frontend/, shared/ are all unbuilt.
+**Last updated:** 2026-10-06 — workflow scaffolding reviewed
+(self-review: no secrets, 8 agent frontmatters + 11-skill roster verified
+against disk), committed in 5 atomic commits, pushed to `origin/main`.
+No product code exists yet; contracts/, indexer/, frontend/, shared/ are
+all unbuilt.
 
 ## Latest pushed changes — read this when you pull
 
-Nothing is pushed yet (AGENTS.md §10: do not push until asked).
+Initial scaffolding push (all on `origin/main`):
+- `a6349c5` root `.gitignore` (secrets, build outputs, `docs/` scratch).
+- `38cca85` `AGENTS.md` routing + `ANCHOR.md` state contract.
+- `6e945a8` 8 subagents under `.opencode/agents/`.
+- `db6a829` 6 Vouchain domain skills.
+- `c9aa92a` shared skills incl. canonical `ui-ux-pro-max` installed via
+  `npx skills add .../ui-ux-pro-max-skill` (installer dropped it in
+  `.agents/` + root `skills-lock.json`; consolidated into
+  `.opencode/skills/` + `.opencode/skills-lock.json`, strays removed).
 
 ## What is true now (verified)
 
@@ -43,7 +53,8 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## In progress right now
 
-None — scaffolding is written but not yet reviewed or committed.
+None — scaffolding is committed and pushed. Awaiting Santhosh's answers
+on the three blockers below before starting the contracts slice.
 
 ## Blocked / waiting on
 
