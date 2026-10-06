@@ -53,8 +53,8 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## In progress right now
 
-None — scaffolding is committed and pushed. Awaiting Santhosh's answers
-on the three blockers below before starting the contracts slice.
+None — README.md (architecture + codebase blueprint) is committed
+locally, awaiting push instruction alongside it.
 
 ## Blocked / waiting on
 
