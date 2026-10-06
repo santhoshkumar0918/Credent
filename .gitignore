@@ -1,0 +1,19 @@
+# Secrets — never commit (AGENTS.md rule 6)
+.env
+.env.*
+*.key
+*.pem
+mnemonic.txt
+
+# Build / deps
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Tooling
+.DS_Store
+
+# Working / ticket files (AGENTS.md section 8 — state lives in ANCHOR.md, not here)
+docs/
