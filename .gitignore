@@ -4,6 +4,8 @@
 *.key
 *.pem
 mnemonic.txt
+# ...except the placeholder template, which IS committed
+!.env.example
 
 # Build / deps
 node_modules/
@@ -11,6 +13,11 @@ dist/
 build/
 .next/
 out/
+
+# Foundry artifacts (per-profile build outputs + broadcast logs)
+cache/
+broadcast/
+broadcast-ledger/
 
 # Tooling
 .DS_Store

@@ -1,0 +1,36 @@
+# Local infra for slice 3 (indexer). Contracts + frontend run natively.
+# Usage: docker compose up -d postgres redis
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: credent-postgres
+    environment:
+      POSTGRES_USER: credent
+      POSTGRES_PASSWORD: credent
+      POSTGRES_DB: credent
+    ports:
+      - "5432:5432"
+    volumes:
+      - credent-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U credent -d credent"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: credent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - credent-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  credent-pgdata:
+  credent-redisdata:

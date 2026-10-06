@@ -4,11 +4,12 @@
 > AGENTS.md. It answers "where are we right now" and is updated at the
 > end of every work session so a fresh agent can resume from it alone.
 
-**Last updated:** 2026-10-06 — workflow scaffolding reviewed
-(self-review: no secrets, 8 agent frontmatters + 11-skill roster verified
-against disk), committed in 5 atomic commits, pushed to `origin/main`.
-No product code exists yet; contracts/, indexer/, frontend/, shared/ are
-all unbuilt.
+**Last updated:** 2026-10-06 — core boilerplate (steps 0–3) built with
+official inits, verified green, committed + pushed as one commit (see
+"Latest pushed changes"). Toolchain: Foundry v1.8.5 (fresh `foundryup`
+install), Bun v1.3.14, Next 16.3.8 + React 19 + Tailwind v4 (CNA),
+wagmi v3 + viem 2.57.3 + react-query 5.104, OZ contracts v5.7.0 (pinned
+tag), forge-std v1.17.0.
 
 ## Latest pushed changes — read this when you pull
 
@@ -24,6 +25,32 @@ Initial scaffolding push (all on `origin/main`):
 
 ## What is true now (verified)
 
+- Boilerplate steps 0–3 (single commit, pushed — hash in "Latest pushed
+  changes" above):
+  - Step 0: root Bun workspaces (`frontend`, `shared`; `indexer` joins
+    in step 4), `tsconfig.base.json`, `.env.example`, `docker-compose.yml`
+    (postgres:16 + redis:7), root `.gitignore` (+Foundry artifacts;
+    `.env.example` force-included, real `.env` stays ignored).
+  - Step 1: `forge init contracts --no-git`; deps as git submodules —
+    `forge-std v1.17.0`, `openzeppelin-contracts v5.7.0` (pinned tag);
+    `foundry.toml` (solc 0.8.28, cancun, monad_testnet + anvil RPC
+    endpoints); `remappings.txt`; 5 empty contract shells in `src/`;
+    `script/Deploy.s.sol` shell; default Counter files removed.
+    `forge build` green, `forge test` exit 0 (no tests yet — expected).
+  - Step 2: `shared/` package (viem 2.57.3) — `types.ts` (EventType +
+    index order matching future .sol enum), `commitments.ts` (canonical
+    `encodeAbiParameters` hasher — never `encodePacked`), `eip712.ts`
+    (consent/disclosure types + `scopeTag()`), `constants.ts` (chain
+    10143, empty address slots). `tsc --noEmit` clean.
+  - Step 3: `bunx create-next-app` frontend (Next 16.3.8, React 19,
+    Tailwind v4) + wagmi 3 / react-query 5.104; `lib/wagmi.ts`
+    (`defineChain` Monad testnet 10143, injected connector);
+    `app/providers.tsx`; home + 6 placeholder routes
+    (attester/record/consent/lender/challenge/explorer); `@shared/*`
+    path alias. `bun run build` green — 7 routes prerendered.
+    (CNA dropped `frontend/AGENTS.md` nextjs-agent-rules — kept; its
+    "read dist/docs first" rule was followed for the App Router code.)
+  - `bun.lock` + `contracts/foundry.lock` committed (deterministic installs).
 - Product source of truth: `../prd/Credent-prd.md` (v3, read-only).
   Build specs live in PRD §§9–16; MVP scope in §17; demo script in §15.
 - Workflow layer (this change, uncommitted):
@@ -53,8 +80,8 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## In progress right now
 
-None — README.md (architecture + codebase blueprint) is committed
-locally, awaiting push instruction alongside it.
+None — boilerplate committed and pushed. Next: step 4 (indexer/ skeleton
++ `indexer` workspace entry) then slice 1 (registry logic).
 
 ## Blocked / waiting on
 

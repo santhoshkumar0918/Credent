@@ -1,0 +1,14 @@
+{
+  "name": "shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "viem": "^2.57.3"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}
