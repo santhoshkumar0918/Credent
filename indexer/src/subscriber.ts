@@ -106,7 +106,12 @@ async function refreshChallengeRow(client: PublicClient, pool: Pool, id: bigint)
   });
 }
 
-async function handleLog(client: PublicClient, pool: Pool, log: Log): Promise<void> {
+async function handleLog(
+  client: PublicClient,
+  pool: Pool,
+  log: Log,
+  blockTimes: Map<bigint, Date>
+): Promise<void> {
   if (log.blockNumber == null || log.transactionHash == null) return; // pending log — skip
   const contract = CONTRACTS.find((c) => c.address.toLowerCase() === log.address.toLowerCase());
   if (!contract) return;
@@ -128,7 +133,13 @@ async function handleLog(client: PublicClient, pool: Pool, log: Log): Promise<vo
     case "BondToppedUp":
       await refreshAttesterRow(client, pool, args["attester"] as Address);
       break;
-    case "AttestationWritten":
+    case "AttestationWritten": {
+      let ts = blockTimes.get(log.blockNumber);
+      if (!ts) {
+        const block = await client.getBlock({ blockNumber: log.blockNumber });
+        ts = new Date(Number(block.timestamp) * 1000);
+        blockTimes.set(log.blockNumber, ts);
+      }
       await insertAttestation(pool, {
         id: args["id"] as bigint,
         attester: args["attester"] as string,
@@ -137,9 +148,11 @@ async function handleLog(client: PublicClient, pool: Pool, log: Log): Promise<vo
         commitmentHash: args["commitmentHash"] as string,
         evidenceHash: args["evidenceHash"] as string,
         blockNumber: log.blockNumber,
+        blockTimestamp: ts,
         txHash: log.transactionHash,
       });
       break;
+    }
     case "AttestationStatusChanged":
       await updateAttestationStatus(
         pool,
@@ -178,6 +191,7 @@ export async function syncOnce(config: SubscriberConfig): Promise<bigint> {
   const safe = head - CONFIRMATIONS;
   let cursor = await getCursor(config.pool, START_BLOCK);
   let ingested = 0n;
+  const blockTimes = new Map<bigint, Date>(); // cleared per syncOnce call
   while (cursor <= safe) {
     const to = cursor + RANGE - 1n <= safe ? cursor + RANGE - 1n : safe;
     for (const contract of CONTRACTS) {
@@ -187,7 +201,7 @@ export async function syncOnce(config: SubscriberConfig): Promise<bigint> {
         toBlock: to,
       });
       for (const log of logs) {
-        await handleLog(client, config.pool, log);
+        await handleLog(client, config.pool, log, blockTimes);
       }
     }
     await setCursor(config.pool, to + 1n);

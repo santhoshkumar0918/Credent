@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS attestations (
   commitment_hash   TEXT NOT NULL,
   evidence_hash     TEXT,
   block_number      BIGINT NOT NULL,
+  block_timestamp   TIMESTAMPTZ,
+  tx_hash           TEXT NOT NULL,
   tx_hash           TEXT NOT NULL,
   status            TEXT NOT NULL DEFAULT 'ACTIVE',
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -55,3 +57,6 @@ CREATE TABLE IF NOT EXISTS indexer_cursor (
   id           INTEGER PRIMARY KEY CHECK (id = 1),
   block_number BIGINT NOT NULL
 );
+
+-- Rolling migrations for existing databases (idempotent).
+ALTER TABLE attestations ADD COLUMN IF NOT EXISTS block_timestamp TIMESTAMPTZ;

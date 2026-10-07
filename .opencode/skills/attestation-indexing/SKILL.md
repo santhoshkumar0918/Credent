@@ -22,13 +22,23 @@ commitment as settled.
 
 ```
 GET  /subjects/:pseudonym/summary   (X-Consent-Token required)
-  → { onTimeRate, attestationCount, attesterDiversity,
-      tenureDays, disputeCount }
-POST /consent/verify   { subjectPseudonym, viewer, scopeTag }
-  → { authorized, expiry }
+  → { attestationCount, activeCount, attesterDiversity, tenureDays,
+      disputeCount, challengedCount, slashedCount,
+      attestations: [{ id, attester, eventType, blockTimestamp, status }],
+      coverageNote }
+POST /consent/verify   { subjectPseudonym, viewer, scopeTag? }
+  → { authorized, expiry, token } | 403
 GET  /attesters/:address/reputation
-  → { reputationScore, bond, attestationCount, challengesLost }
+  → { reputationScore, bond, attestationCount, challengesLost, ... }
 ```
+
+- The summary serves EXISTENCE + COVERAGE, never onTimeRate: computing
+  a repayment rate would require plaintext amounts in the indexer,
+  violating the commitment architecture. Lenders compute onTimeRate from
+  the disclosures they hold and check COMPLETENESS against the
+  enumeration (a withheld id is visible as a gap) — that check is the
+  adverse-selection answer. This deviation from PRD §11 is deliberate
+  and documented in `api.ts` + ANCHOR.md.
 
 - Summary methodology is public and re-computable — document the
   formula next to the endpoint, never a black-box number.

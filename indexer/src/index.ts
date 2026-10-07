@@ -1,15 +1,23 @@
-// Indexer entrypoint (ticket I1): apply schema, tail the chain forever.
-// Env: DATABASE_URL (default: local compose Postgres), MONAD_RPC_URL.
+// Indexer entrypoint (tickets I1–I2): apply schema, tail the chain, serve
+// the CreditAggregator API on PORT (default 3111 — 3000 stays free for the
+// Next.js dev server).
+// Env: DATABASE_URL (default: local compose Postgres), MONAD_RPC_URL,
+// REDIS_URL (default: local compose Redis), PORT.
 // Shutdown: SIGINT/SIGTERM aborts the poll loop after the current batch.
 
+import { createPublicClient, http } from "viem";
+import Redis from "ioredis";
 import { applySchema, createPool } from "./db.js";
 import { runSubscriber } from "./subscriber.js";
+import { router, type ApiContext } from "./api.js";
 
 export {};
 
 const databaseUrl =
   process.env["DATABASE_URL"] ?? "postgres://credent:credent@localhost:5432/credent";
 const rpcUrl = process.env["MONAD_RPC_URL"] ?? "https://testnet-rpc.monad.xyz";
+const redisUrl = process.env["REDIS_URL"] ?? "redis://localhost:6379";
+const port = Number(process.env["PORT"] ?? 3111);
 
 const pool = createPool(databaseUrl);
 // The DB container may still be initializing when the indexer boots
@@ -27,8 +35,28 @@ for (let attempt = 1; ; attempt++) {
 console.log("credent indexer: schema ready, subscribing from deploy cursor");
 
 const controller = new AbortController();
-process.on("SIGINT", () => controller.abort());
-process.on("SIGTERM", () => controller.abort());
+// Immediate exit on signal is safe: the cursor advances only after a batch
+// fully persists, and all writes are idempotent (upserts / refresh-overwrite),
+// so a killed batch is simply replayed on restart. (A graceful drain would
+// hang restarts inside long RPC loops.)
+const shutdown = () => process.exit(0);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
-await runSubscriber({ rpcUrl, pool }, controller.signal);
-await pool.end();
+const ctx: ApiContext = {
+  pool,
+  client: createPublicClient({ transport: http(rpcUrl) }),
+  redis: new Redis(redisUrl, { maxRetriesPerRequest: 1 }),
+};
+
+const server = Bun.serve({ port, fetch: router(ctx) });
+console.log(`credent api: listening on :${server.port}`);
+
+// The poll loop never resolves cleanly; a throw here is fatal.
+runSubscriber({ rpcUrl, pool }, controller.signal).catch(async (err) => {
+  console.error("subscriber fatal:", err);
+  server.stop();
+  ctx.redis.disconnect();
+  await pool.end();
+  process.exit(1);
+});

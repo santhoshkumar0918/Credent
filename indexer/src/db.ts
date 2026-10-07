@@ -29,7 +29,11 @@ export async function applySchema(pool: Pool): Promise<void> {
   const client = await pool.connect();
   try {
     for (const stmt of statements) {
-      if (stmt.includes("CREATE TABLE") || stmt.includes("CREATE INDEX")) {
+      if (
+        stmt.includes("CREATE TABLE") ||
+        stmt.includes("CREATE INDEX") ||
+        stmt.includes("ALTER TABLE")
+      ) {
         await client.query(stmt);
       }
     }
@@ -100,13 +104,14 @@ export async function insertAttestation(
     commitmentHash: string;
     evidenceHash: string;
     blockNumber: bigint;
+    blockTimestamp: Date | null;
     txHash: string;
   }
 ): Promise<void> {
   await pool.query(
     `INSERT INTO attestations
-       (id, attester, subject_pseudonym, event_type, commitment_hash, evidence_hash, block_number, tx_hash, status)
-     VALUES ($1, $2, $3, $4, $5, NULLIF($6, '0x0000000000000000000000000000000000000000000000000000000000000000'), $7, $8, 'ACTIVE')
+       (id, attester, subject_pseudonym, event_type, commitment_hash, evidence_hash, block_number, block_timestamp, tx_hash, status)
+     VALUES ($1, $2, $3, $4, $5, NULLIF($6, '0x0000000000000000000000000000000000000000000000000000000000000000'), $7, $8, $9, 'ACTIVE')
      ON CONFLICT (id) DO NOTHING`,
     [
       row.id.toString(),
@@ -116,6 +121,7 @@ export async function insertAttestation(
       row.commitmentHash,
       row.evidenceHash,
       row.blockNumber.toString(),
+      row.blockTimestamp,
       row.txHash,
     ]
   );
