@@ -97,9 +97,9 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## Contract track (tickets live in `docs/contract-track/issues/` — gitignored)
 
-Frontier: **01-challenge-module** (in progress, this session).
+Frontier: **02-mock-lending-pool** (ticket 01 done this session).
 
-- [ ] `01-challenge-module` — bonded challenges + slash settlement + registry wiring
+- [x] `01-challenge-module` — bonded challenges + slash settlement + registry wiring (`7482912` impl, `09ac15b` tests)
 - [ ] `02-mock-lending-pool` ← 01 (demo loan loop)
 - [ ] `03-testnet-deploy` ← 02 (deploy + verify on 10143; needs funded key)
 - [ ] `04-abi-export` ← 03 (ABIs + addresses into shared/)
@@ -107,10 +107,8 @@ Frontier: **01-challenge-module** (in progress, this session).
 
 ## In progress right now
 
-Ticket 01 (ChallengeModule): implementing `openChallenge` (bond +
-live-grant standing + 7-day window from attestation) → `submitDefense` →
-`resolve` (both outcomes) → `claim`, plus `hasValidGrant` on
-ConsentRegistry and `markActive` on AttestationRegistry.
+None — ticket 01 committed locally (`7482912`, `09ac15b`), unpushed.
+Next: ticket 02 (MockLendingPool demo loop).
 
 ## Blocked / waiting on
 
