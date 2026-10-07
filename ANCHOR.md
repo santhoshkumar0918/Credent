@@ -132,8 +132,14 @@ own 5 MON bonds from individual faucet claims.
 
 ## In progress right now
 
-None — tickets 04 + 05-script committed locally, unpushed.
-Next: run ProveSlash once 3 demo wallets are faucet-funded (5 / gas-only / 0.5+ MON).
+Ticket 05 prep: 3 demo wallets generated locally, keys ONLY in
+gitignored `contracts/.env.demo` (chmod 600, never committed).
+Awaiting one 5 MON faucet drip on each, then ProveSlash executes:
+- Attester `0xDCBde073aEBEA2d92394D0206BE5235CEb2eEd2D` (needs 5+ MON)
+- Subject `0x944115Eb0Ad1A2c86b0FBDB4918930C220ffde28` (gas only)
+- Challenger `0xC3e95328adaB4C416664D1520DDceDc337E847f6` (needs 0.5+ MON)
+Faucet: https://faucet.monad.xyz. Watch live:
+https://testnet.monadscan.com/address/<addr>.
 
 ## Blocked / waiting on
 
