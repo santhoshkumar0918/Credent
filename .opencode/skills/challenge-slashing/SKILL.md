@@ -19,20 +19,22 @@ attestation: ACTIVE → CHALLENGED → SLASHED (on challenger win)
 ```
 
 - `openChallenge(attestationId, disclosureProofHash)` requires
-  `msg.value >= CHALLENGER_BOND` (spam deterrent) AND proof of a
-  valid, non-expired disclosure/consent for that attestation
-  (checked against `ConsentRegistry`). Late challenges (past
-  `windowEnds`) revert: "Challenge window expired."
+  `msg.value >= CHALLENGER_BOND` (spam deterrent) AND a live grant
+  (`ConsentRegistry.hasValidGrant` for the attestation's pseudonym) AND
+  an open window: **7 days from the attestation's on-chain timestamp**
+  (disclosure time is off-chain, so the window runs from the write —
+  disclosures convey the timestamp so lenders know it). Late challenges
+  revert; one OPEN challenge per attestation at a time.
 - `submitDefense` is attester-of-that-challenge only, carrying the
   IPFS `evidenceHash` defense.
-- `resolve(challengeId, challengerWins)` is `onlyArbiter`. Hackathon:
-  single owner-controlled address — label interim in code + docs;
-  production path is an oracle/arbitration network (roadmap, not
-  demo scope). On challenger win: `AttesterRegistry.slash(...)` pays
-  the challenger from the attester's bond, reputation drops,
-  attestation marked `SLASHED`.
-- `claim` lets the winner withdraw the combined bond. Reentrancy-guard
-  every bond movement.
+- `resolve(challengeId, challengerWins)` is `onlyArbiter` (hackathon:
+  single address — label interim in code + docs). Challenger win:
+  `slash(min(bond, CHALLENGER_BOND))` straight to the challenger,
+  reputation −10, attestation `SLASHED`; the challenger reclaims their
+  own bond via `claim`. Attester win: attestation cleared to `ACTIVE`
+  (a survived challenge is signal), reputation +2, forfeited bond
+  compensates the attester via `claim`. `claim` pays exactly once,
+  reentrancy-guarded; effects + events always precede external calls.
 
 ## Failure semantics (PRD section 13)
 

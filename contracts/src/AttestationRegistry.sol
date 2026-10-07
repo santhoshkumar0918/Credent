@@ -120,6 +120,15 @@ contract AttestationRegistry is Ownable {
         emit AttestationStatusChanged(id, AttestationStatus.SLASHED);
     }
 
+    /// @notice Clears an attestation whose challenge the attester SURVIVED —
+    /// a survived challenge is signal, so the record returns to ACTIVE
+    /// (usable for underwriting) instead of rotting in CHALLENGED.
+    function markActive(uint256 id) external onlyChallengeModule {
+        if (id >= nextAttestationId) revert AttestationNotFound();
+        attestations[id].status = AttestationStatus.ACTIVE;
+        emit AttestationStatusChanged(id, AttestationStatus.ACTIVE);
+    }
+
     /// @notice The subject's own flag path: someone attested against MY pseudonym
     /// and it is false. Signs EIP-191 personal-sign over
     /// keccak256("VOUCHAIN_DISPUTE:", chainid, this, attestationId).

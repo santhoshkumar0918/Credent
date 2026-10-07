@@ -119,4 +119,16 @@ contract ConsentRegistry is EIP712 {
         }
         return false;
     }
+
+    /// @notice Standing check for ChallengeModule.openChallenge: does `viewer`
+    /// hold ANY live (non-expired, non-revoked) grant for this pseudonym?
+    /// Scope-matching is enforced at disclosure delivery (indexer); on-chain
+    /// standing is the live grant plus the challenger bond.
+    function hasValidGrant(bytes32 subjectPseudonym, address viewer) external view returns (bool) {
+        Consent storage c = consents[subjectPseudonym][viewer];
+        if (c.grantSigner == address(0) || c.revoked) return false;
+        // forge-lint: disable-next-line(block-timestamp)
+        if (block.timestamp >= c.expiry) return false;
+        return true;
+    }
 }
