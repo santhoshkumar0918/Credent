@@ -95,11 +95,22 @@ commitment-based attestation core on-chain
 (`AttesterRegistry` + `AttestationRegistry` + deploy + forge tests on
 Monad testnet), per PRD §9 and AGENTS.md §4.
 
+## Contract track (tickets live in `docs/contract-track/issues/` — gitignored)
+
+Frontier: **01-challenge-module** (in progress, this session).
+
+- [ ] `01-challenge-module` — bonded challenges + slash settlement + registry wiring
+- [ ] `02-mock-lending-pool` ← 01 (demo loan loop)
+- [ ] `03-testnet-deploy` ← 02 (deploy + verify on 10143; needs funded key)
+- [ ] `04-abi-export` ← 03 (ABIs + addresses into shared/)
+- [ ] `05-live-slash-proof` ← 03 (scripted slash on testnet; parallel with 04)
+
 ## In progress right now
 
-None — slice 1 committed locally (`88f4909`, `ee5be89`), unpushed.
-Next: slice 2 (ChallengeModule + MockLendingPool), then testnet deploy
-once a funded deployer key exists.
+Ticket 01 (ChallengeModule): implementing `openChallenge` (bond +
+live-grant standing + 7-day window from attestation) → `submitDefense` →
+`resolve` (both outcomes) → `claim`, plus `hasValidGrant` on
+ConsentRegistry and `markActive` on AttestationRegistry.
 
 ## Blocked / waiting on
 
