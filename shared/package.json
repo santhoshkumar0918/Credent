@@ -9,6 +9,7 @@
     "viem": "^2.57.3"
   },
   "devDependencies": {
+    "bun-types": "^1.4.2",
     "typescript": "^7.0.2"
   }
 }

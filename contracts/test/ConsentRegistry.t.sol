@@ -4,10 +4,12 @@ pragma solidity ^0.8.28;
 import {Test} from "forge-std/Test.sol";
 import {ConsentRegistry} from "../src/ConsentRegistry.sol";
 
-/// @notice Slice 1 tests — EIP-712 grants, scopes, expiry, revocation.
+/// @notice Slice 1 tests — EIP-712 grants, scopes, expiry, revocation, nonces.
 /// Mirrors shared/src/eip712.ts: domain ("VouchainConsent", "1") + typehashes.
 /// Pseudonym binding: PSEUDO = keccak256(abi.encode(subject, attester)) —
 /// only the subject key the pseudonym derives from can grant.
+/// Nonce binding: each grant carries the exact next nonce, so a revoked
+/// grant can never be replayed back to life.
 contract ConsentRegistryTest is Test {
     ConsentRegistry consent;
 
@@ -16,7 +18,7 @@ contract ConsentRegistryTest is Test {
     bytes32 constant P2P = keccak256("P2P_LOAN_REPAYMENT");
 
     bytes32 constant GRANT_TYPEHASH = keccak256(
-        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry)"
+        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry,uint256 nonce)"
     );
     bytes32 constant REVOKE_TYPEHASH = keccak256("ConsentRevoke(bytes32 subjectPseudonym,address viewer)");
 
@@ -48,13 +50,17 @@ contract ConsentRegistryTest is Test {
         );
     }
 
-    function _signGrant(bytes32 pseudo, address v, bytes32[] memory scopes, uint256 expiry)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function _signGrant(
+        bytes32 pseudo,
+        address v,
+        bytes32[] memory scopes,
+        uint256 expiry,
+        uint256 nonce
+    ) internal view returns (bytes memory) {
         bytes32 structHash = keccak256(
-            abi.encode(GRANT_TYPEHASH, pseudo, v, attester, keccak256(abi.encodePacked(scopes)), expiry)
+            abi.encode(
+                GRANT_TYPEHASH, pseudo, v, attester, keccak256(abi.encodePacked(scopes)), expiry, nonce
+            )
         );
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _separator(), structHash));
         (uint8 vv, bytes32 r, bytes32 s) = vm.sign(subjectKey, digest);
@@ -76,8 +82,9 @@ contract ConsentRegistryTest is Test {
     }
 
     function _grant() internal {
-        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days);
-        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, sig);
+        uint256 nonce = consent.nonces(PSEUDO, viewer);
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days, nonce);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, nonce, sig);
     }
 
     function test_GrantAuthorizesScopeOnly() public {
@@ -90,30 +97,62 @@ contract ConsentRegistryTest is Test {
 
     function test_GrantEmptyScopeReverts() public {
         bytes32[] memory empty = new bytes32[](0);
-        bytes memory sig = _signGrant(PSEUDO, viewer, empty, block.timestamp + 1 days);
+        bytes memory sig = _signGrant(PSEUDO, viewer, empty, block.timestamp + 1 days, 0);
         vm.expectRevert(ConsentRegistry.EmptyScope.selector);
-        consent.grantAccess(PSEUDO, viewer, attester, empty, block.timestamp + 1 days, sig);
+        consent.grantAccess(PSEUDO, viewer, attester, empty, block.timestamp + 1 days, 0, sig);
     }
 
     function test_GrantExpiredReverts() public {
-        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp - 1);
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp - 1, 0);
         vm.expectRevert(ConsentRegistry.GrantExpired.selector);
-        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp - 1, sig);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp - 1, 0, sig);
+    }
+
+    function test_GrantStaleNonceReverts() public {
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days, 0);
+        vm.expectRevert(ConsentRegistry.StaleNonce.selector);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, 7, sig);
+    }
+
+    function test_ReplayRevokedGrantReverts() public {
+        // THE replay hole the nonce closes: grant → revoke → replay the
+        // exact same grant calldata. Without the nonce this silently
+        // un-revoked the grant; now it must revert.
+        uint256 expiry = block.timestamp + 30 days;
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), expiry, 0);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), expiry, 0, sig);
+        consent.revokeAccess(PSEUDO, viewer, _signRevoke(PSEUDO, viewer, subjectKey));
+        assertFalse(consent.isAuthorized(PSEUDO, viewer, GIG));
+        vm.expectRevert(ConsentRegistry.StaleNonce.selector);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), expiry, 0, sig);
+        assertFalse(consent.isAuthorized(PSEUDO, viewer, GIG));
+    }
+
+    function test_RegrantAfterRevokeUsesNextNonce() public {
+        _grant();
+        consent.revokeAccess(PSEUDO, viewer, _signRevoke(PSEUDO, viewer, subjectKey));
+        uint256 nonce = consent.nonces(PSEUDO, viewer);
+        assertEq(nonce, 1);
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days, nonce);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, nonce, sig);
+        assertTrue(consent.isAuthorized(PSEUDO, viewer, GIG));
     }
 
     function test_GrantWrongAttesterReverts() public {
         // Signed for attester A, submitted for attester B: ownership fails.
-        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days);
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days, 0);
         vm.expectRevert(ConsentRegistry.NotPseudonymOwner.selector);
-        consent.grantAccess(PSEUDO, viewer, makeAddr("other-attester"), _scopes(), block.timestamp + 30 days, sig);
+        consent.grantAccess(
+            PSEUDO, viewer, makeAddr("other-attester"), _scopes(), block.timestamp + 30 days, 0, sig
+        );
     }
 
     function test_GrantTamperedFieldsReverts() public {
         // Signed for 30-day expiry, submitted as 90-day: the recovered key
         // no longer derives PSEUDO, so ownership — not just integrity — fails.
-        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days);
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days, 0);
         vm.expectRevert(ConsentRegistry.NotPseudonymOwner.selector);
-        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 90 days, sig);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 90 days, 0, sig);
     }
 
     function test_StrangerCannotGrantForPseudonym() public {
@@ -128,14 +167,15 @@ contract ConsentRegistryTest is Test {
                 viewer,
                 attester,
                 keccak256(abi.encodePacked(_scopes())),
-                block.timestamp + 30 days
+                block.timestamp + 30 days,
+                uint256(0)
             )
         );
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _separator(), structHash));
         (uint8 vv, bytes32 r, bytes32 s) = vm.sign(strangerKey, digest);
         vm.expectRevert(ConsentRegistry.NotPseudonymOwner.selector);
         consent.grantAccess(
-            PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, abi.encodePacked(r, s, vv)
+            PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, 0, abi.encodePacked(r, s, vv)
         );
     }
 
@@ -149,8 +189,7 @@ contract ConsentRegistryTest is Test {
     function test_RevokeFlow() public {
         _grant();
         assertTrue(consent.isAuthorized(PSEUDO, viewer, GIG));
-        bytes memory rsig = _signRevoke(PSEUDO, viewer, subjectKey);
-        consent.revokeAccess(PSEUDO, viewer, rsig);
+        consent.revokeAccess(PSEUDO, viewer, _signRevoke(PSEUDO, viewer, subjectKey));
         assertFalse(consent.isAuthorized(PSEUDO, viewer, GIG));
     }
 
@@ -170,9 +209,10 @@ contract ConsentRegistryTest is Test {
 
     function test_RelayedGrantSucceeds() public {
         // Anyone (sponsor/paymaster) may submit; the SUBJECT's signature authorizes.
-        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days);
+        uint256 nonce = consent.nonces(PSEUDO, viewer);
+        bytes memory sig = _signGrant(PSEUDO, viewer, _scopes(), block.timestamp + 30 days, nonce);
         vm.prank(makeAddr("relayer"));
-        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, sig);
+        consent.grantAccess(PSEUDO, viewer, attester, _scopes(), block.timestamp + 30 days, nonce, sig);
         assertTrue(consent.isAuthorized(PSEUDO, viewer, GIG));
     }
 }

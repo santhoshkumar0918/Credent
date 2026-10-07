@@ -17,6 +17,11 @@ mapping(subjectPseudonym => viewer => Consent)
   paymaster submits; the subject never pays gas). The contract
   verifies the signature before writing — an unsigned or
   mis-signed grant reverts.
+- Each grant carries the exact next `nonces(pseudonym, viewer)` value
+  (part of the signed struct); anything else reverts `StaleNonce`.
+  This closes the replay hole: signatures are public once submitted,
+  so without the nonce anyone could replay a revoked grant back to
+  life. TS sides read the next nonce from the `nonces` view.
 - Grants are bounded and future-dated; unbounded or
   already-expired grants revert. `revokeAccess` takes effect on the
   next disclosure check — revocation stops *new* disclosures immediately

@@ -28,7 +28,7 @@ contract ChallengeModuleTest is Test {
     bytes32 constant PROOF = keccak256("disclosure-proof");
 
     bytes32 constant GRANT_TYPEHASH = keccak256(
-        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry)"
+        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry,uint256 nonce)"
     );
 
     function setUp() public {
@@ -61,7 +61,7 @@ contract ChallengeModuleTest is Test {
         scopes[0] = keccak256("GIG_PAYOUT");
         uint256 expiry = block.timestamp + 30 days;
         consentRegistry.grantAccess(
-            PSEUDO, lender, attester, scopes, expiry, _grantSig(scopes, expiry)
+            PSEUDO, lender, attester, scopes, expiry, 0, _grantSig(scopes, expiry)
         );
     }
 
@@ -82,8 +82,11 @@ contract ChallengeModuleTest is Test {
     }
 
     function _grantSig(bytes32[] memory scopes, uint256 expiry) internal view returns (bytes memory) {
+        // Fresh consent per test → nonce starts at 0.
         bytes32 structHash = keccak256(
-            abi.encode(GRANT_TYPEHASH, PSEUDO, lender, attester, keccak256(abi.encodePacked(scopes)), expiry)
+            abi.encode(
+                GRANT_TYPEHASH, PSEUDO, lender, attester, keccak256(abi.encodePacked(scopes)), expiry, uint256(0)
+            )
         );
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _separator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(subjectKey, digest);

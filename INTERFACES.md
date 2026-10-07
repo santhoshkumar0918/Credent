@@ -8,9 +8,10 @@
 ## 1. Subject Pseudonym Formula
 To preserve privacy while maintaining persistent behavior history tied to an attester relationship:
 
-$$\text{subjectPseudonym} = \text{keccak256}(\text{abi.encodePacked}(\text{subjectWallet}, \text{attesterAddress}))$$
+$$\text{subjectPseudonym} = \text{keccak256}(\text{abi.encode}(\text{subjectWallet}, \text{attesterAddress}))$$
 
-- Canonical implementation: `shared/src/commitments.ts` -> `computePseudonym(subject, attester)`
+- Canonical implementation: `shared/src/commitments.ts` -> `pseudonymFor(subject, attester)`.
+- NOTE (`abi.encode`, padded — NOT `abi.encodePacked`): the two hash differently, and the deployed `ConsentRegistry` / `AttestationRegistry` verify `keccak256(abi.encode(signer, attester))` on-chain. Every producer MUST use the shared helper, never a local reimplementation.
 - Contracts verify that `subjectPseudonym` matches the msg.sender / subject in EIP-712 consent grants and disputes.
 
 ---
@@ -21,22 +22,29 @@ $$\text{subjectPseudonym} = \text{keccak256}(\text{abi.encodePacked}(\text{subje
 export interface PlatformWebhookPayload {
   workerId: string;                     // e.g. "worker_9821"
   platformAttester: `0x${string}`;       // Registered attester contract / wallet address
-  eventType: "GIG_PAYOUT" | "RENT" | "BNPL_INSTALLMENT" | "UTILITY_BILL" | "PEER_LOAN";
+  eventType: "GIG_PAYOUT" | "RENT" | "BNPL_INSTALLMENT" | "UTILITY_BILL" | "P2P_LOAN_REPAYMENT";
   amount: string;                        // Decimal string, e.g. "12500.00"
   currency: "INR" | "USD" | "MON";
   outcome: "ON_TIME" | "LATE" | "MISSED";
   timestamp: number;                     // Unix timestamp in seconds
   evidenceHash: `0x${string}`;          // IPFS content CID hash
-  proofTier: 1 | 2 | 3;                  // T1=Bonded, T2=Source-Verified, T3=zkTLS
-  platformSignature: `0x${string}`;      // ECDSA signature over keccak256(payload)
-}
-```
+   proofTier: 1 | 2 | 3;                  // T1=Bonded, T2=Source-Verified, T3=zkTLS
+   platformSignature: `0x${string}`;      // ECDSA signature over keccak256(payload)
+ }
+ ```
+
+ Outcome mapping (chain commits a boolean per PRD §10 — `shared/src/types.ts`
+ `outcomeToOnTime`, the single mapping all UIs use): `ON_TIME` → `true`,
+ `LATE` / `MISSED` / `DEFAULTED` → `false`. The rich label lives off-chain
+ (attesterNote / disclosure); the commitment keeps the boolean.
 
 ---
 
 ## 3. Consent EIP-712 Typed Data Specification
 
-Frozen definition matching `shared/src/eip712.ts` and `ConsentRegistry.sol`:
+Frozen definition matching `shared/src/eip712.ts` and `ConsentRegistry.sol`
+(`ConsentRegistry.GRANT_TYPEHASH` — the nonce closes the grant-replay hole:
+replaying a revoked grant reverts `StaleNonce`):
 
 ```ts
 export const EIP712_CONSENT_DOMAIN = {
@@ -48,11 +56,12 @@ export const EIP712_CONSENT_DOMAIN = {
 
 export const EIP712_CONSENT_TYPES = {
   ConsentGrant: [
-    { name: "subject", type: "address" },
+    { name: "subjectPseudonym", type: "bytes32" },
+    { name: "viewer", type: "address" },
     { name: "attester", type: "address" },
     { name: "scopeTags", type: "bytes32[]" },
     { name: "expiry", type: "uint256" },
-    { name: "nonce", type: "uint256" },
+    { name: "nonce", type: "uint256" }, // must equal nonces(pseudonym, viewer)
   ],
 };
 ```
@@ -63,10 +72,12 @@ export const EIP712_CONSENT_TYPES = {
 
 Relayer endpoint: `POST /api/relayer/submit`
 
-Allowlisted state-changing functions:
-1. `ConsentRegistry.grantAccess(address subject, address attester, bytes32[] scopeTags, uint256 expiry, bytes signature)`
-2. `ConsentRegistry.revokeAccess(bytes32 grantId)`
-3. `ChallengeModule.openChallenge(bytes32 attestationId, bytes proofPayload)`
+Allowlisted state-changing functions (exact on-chain signatures — the
+relayer MUST use these; anything else reverts):
+
+1. `ConsentRegistry.grantAccess(bytes32 subjectPseudonym, address viewer, address attester, bytes32[] scopeTags, uint256 expiry, uint256 nonce, bytes signature)`
+2. `ConsentRegistry.revokeAccess(bytes32 subjectPseudonym, address viewer, bytes signature)`
+3. `ChallengeModule.openChallenge(uint256 attestationId, bytes32 disclosureProofHash)`
 
 Relayer verification rules:
 - Verifies EIP-712 signature off-chain before submitting tx.
@@ -87,7 +98,7 @@ Relayer verification rules:
 | `/api/consent/tokens/:id` | GET | Verify consent token & retrieve encrypted key | Session (Lender) |
 | `/api/relayer/submit` | POST | Submit EIP-712 meta-transaction to Monad | Public / Rate-limited |
 | `/api/subjects/:pseudonym/summary` | GET | Fetch score + verified disclosures | Consent token |
-| `/api/score/:pseudonym` | GET | Fetch open reference credit score | Consent token |
+| `/api/score/:pseudonym` | GET | Transparent demo heuristic ONLY (wraps the `MockLendingPool` formula, honestly labeled — never branded a credit score, per the product's core non-goal) | Consent token |
 | `/api/attesters/:address/reputation` | GET | Fetch attester reputation, bond & tier | Public |
 | `/api/pool/stats` | GET | Fetch lending pool tranche stats | Public |
 | `/api/notify/send` | POST | Dispatch SMS / WhatsApp notification via Twilio | Internal / Agent |
@@ -98,10 +109,11 @@ Relayer verification rules:
 
 ## 6. Honesty & Scope Declarations
 
-To maintain strict compliance with AGENTS.md and PRD §24:
+To maintain strict compliance with AGENTS.md and PRD §§9–10:
 
-1. **`demo stablecoin`**: Monad testnet mock ERC20 token used for loan origination and payouts.
+1. **`demo funds`**: pool loans settle in native MON on testnet (PRD §9 `payable`; TESTNET-SCALED bonds). No ERC20 involved.
 2. **`pilot platform`**: `apps/platform-sim` simulated gig-platform operator.
 3. **`interim signed disclosure`**: MVP relies on EIP-712 scoped key release. ZK threshold-proof circuit (Noir/Circom) is the production roadmap item.
 4. **`arbiter address`**: Hackathon `ChallengeModule` relies on an owner-controlled resolver address. Decentralized oracle network is the production roadmap item.
 5. **`wallet abandonment`**: Wallet abandonment remains an unsolved limitation in v1 and is explicitly disclosed in pitch materials.
+6. **Data ownership**: ONE Postgres, two namespaces — the attestation graph mirror has exactly one writer (indexer subscriber); app/operational tables belong to `apps/api`. Consent/product reads defer to on-chain truth; the indexer API serves chain-data reads, Fastify serves product flows.

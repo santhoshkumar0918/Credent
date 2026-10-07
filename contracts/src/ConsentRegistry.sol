@@ -32,12 +32,19 @@ contract ConsentRegistry is EIP712 {
     }
 
     bytes32 private constant GRANT_TYPEHASH = keccak256(
-        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry)"
+        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry,uint256 nonce)"
     );
     bytes32 private constant REVOKE_TYPEHASH =
         keccak256("ConsentRevoke(bytes32 subjectPseudonym,address viewer)");
 
     mapping(bytes32 => mapping(address => Consent)) public consents;
+    /// @notice Replay guard: each grant must carry the exact next nonce for
+    /// its (pseudonym, viewer) pair. Without this, anyone could replay a
+    /// subject's old grant transaction and silently un-revoke it
+    /// (signatures are public once submitted). Adopted from the
+    /// INTERFACES.md review — the one idea from that doc that fixed a real
+    /// hole here.
+    mapping(bytes32 => mapping(address => uint256)) public nonces;
 
     event AccessGranted(
         bytes32 indexed subjectPseudonym, address indexed viewer, address indexed attester, uint256 expiry
@@ -50,6 +57,7 @@ contract ConsentRegistry is EIP712 {
     error NoGrant();
     error NotGrantSigner();
     error NotPseudonymOwner();
+    error StaleNonce();
 
     constructor() EIP712("VouchainConsent", "1") {}
 
@@ -59,12 +67,14 @@ contract ConsentRegistry is EIP712 {
         address attester,
         bytes32[] calldata scopeTags,
         uint256 expiry,
+        uint256 nonce,
         bytes calldata subjectSignature
     ) external {
         if (scopeTags.length == 0) revert EmptyScope();
         // Grant expiries are day-scale; validator timestamp drift (~seconds) is immaterial.
         // forge-lint: disable-next-line(block-timestamp)
         if (expiry <= block.timestamp) revert GrantExpired();
+        if (nonce != nonces[subjectPseudonym][viewer]) revert StaleNonce();
         bytes32 structHash = keccak256(
             abi.encode(
                 GRANT_TYPEHASH,
@@ -72,13 +82,15 @@ contract ConsentRegistry is EIP712 {
                 viewer,
                 attester,
                 keccak256(abi.encodePacked(scopeTags)),
-                expiry
+                expiry,
+                nonce
             )
         );
         address signer = ECDSA.recover(_hashTypedDataV4(structHash), subjectSignature);
         if (signer == address(0)) revert InvalidSignature();
         // THE subject-ownership check: pseudonym must derive from (signer, attester).
         if (keccak256(abi.encode(signer, attester)) != subjectPseudonym) revert NotPseudonymOwner();
+        nonces[subjectPseudonym][viewer] = nonce + 1;
         consents[subjectPseudonym][viewer] =
             Consent({scopeTags: scopeTags, expiry: expiry, revoked: false, grantSigner: signer});
         // ECDSA.recover is an internal library call — no external interaction,

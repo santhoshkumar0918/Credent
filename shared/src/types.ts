@@ -29,6 +29,16 @@ export const OUTCOME_CODES = {
 
 export type OutcomeCode = keyof typeof OUTCOME_CODES;
 
+/**
+ * UI 4-state outcome → on-chain commitment boolean. Only ON_TIME commits
+ * true; every other outcome commits false. The rich label lives off-chain
+ * (attesterNote / disclosure); the chain keeps the PRD §10 boolean.
+ * Single mapping both UIs must use — never reimplement per screen.
+ */
+export function outcomeToOnTime(outcome: OutcomeCode): boolean {
+  return outcome === "ON_TIME";
+}
+
 export type Hex = `0x${string}`;
 
 export interface CommitmentInput {

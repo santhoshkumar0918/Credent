@@ -34,7 +34,7 @@ contract ProveSlash is Script {
         ChallengeModule(0xd7Ca8042C236B9c29CbaC8c192100825F5969A0D);
 
     bytes32 constant GRANT_TYPEHASH = keccak256(
-        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry)"
+        "ConsentGrant(bytes32 subjectPseudonym,address viewer,address attester,bytes32[] scopeTags,uint256 expiry,uint256 nonce)"
     );
 
     function run() external {
@@ -96,9 +96,10 @@ contract ProveSlash is Script {
         bytes32[] memory scopes = new bytes32[](1);
         scopes[0] = keccak256("GIG_PAYOUT");
         uint256 expiry = block.timestamp + 30 days;
-        bytes memory grantSig = _grantSig(subjectKey, pseudo, challenger, attester, scopes, expiry);
+        uint256 nonce = CONSENT_REGISTRY.nonces(pseudo, challenger);
+        bytes memory grantSig = _grantSig(subjectKey, pseudo, challenger, attester, scopes, expiry, nonce);
         vm.startBroadcast(subjectKey);
-        CONSENT_REGISTRY.grantAccess(pseudo, challenger, attester, scopes, expiry, grantSig);
+        CONSENT_REGISTRY.grantAccess(pseudo, challenger, attester, scopes, expiry, nonce, grantSig);
         vm.stopBroadcast();
         console.log("subject granted GIG_PAYOUT disclosure to challenger");
     }
@@ -155,11 +156,12 @@ contract ProveSlash is Script {
         address challenger,
         address attester,
         bytes32[] memory scopes,
-        uint256 expiry
+        uint256 expiry,
+        uint256 nonce
     ) internal view returns (bytes memory) {
         bytes32 structHash = keccak256(
             abi.encode(
-                GRANT_TYPEHASH, pseudo, challenger, attester, keccak256(abi.encodePacked(scopes)), expiry
+                GRANT_TYPEHASH, pseudo, challenger, attester, keccak256(abi.encodePacked(scopes)), expiry, nonce
             )
         );
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _separator(), structHash));
