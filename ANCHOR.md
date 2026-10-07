@@ -97,18 +97,44 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## Contract track (tickets live in `docs/contract-track/issues/` — gitignored)
 
-Frontier: **03-testnet-deploy** (ticket 02 done this session).
+Frontier: **04-abi-export** (ticket 03 done this session — DEPLOYED).
 
 - [x] `01-challenge-module` — bonded challenges + slash settlement + registry wiring (`7482912` impl, `09ac15b` tests)
 - [x] `02-mock-lending-pool` — demo loop: transparent score → gated loan → repay-as-attestation (`d2ede33` impl, `d269a64` tests)
-- [ ] `03-testnet-deploy` ← 02 (deploy + verify on 10143; needs funded key)
+- [x] `03-testnet-deploy` — live on Monad testnet 10143, Sourcify-verified `perfect` ×5, pool funded + bonded (ticket-03 commit)
 - [ ] `04-abi-export` ← 03 (ABIs + addresses into shared/)
 - [ ] `05-live-slash-proof` ← 03 (scripted slash on testnet; parallel with 04)
 
+## Testnet deployment (2026-10-07, chain 10143)
+
+Deployer `0x9f60505f51b9a0a237Ce9b2118B91E020eC22900` (testnet-only key,
+single-use — retired after this deploy; never committed, history scrubbed).
+
+| Contract | Address | Deploy tx |
+|---|---|---|
+| AttesterRegistry | `0x84a84cfe2fe62499ba0fdf9cf49f617865f4152d` | `0x0dd79dcc…73828339` |
+| AttestationRegistry | `0x7fceaa85c5f74d54554bffd46a41653fd03da962` | `0xd45680ab…61cf86bea22` |
+| ConsentRegistry | `0x6f47a618213d44afdaeb605e3262e2f874471b74` | `0xaf7717e9…944c3b69f` |
+| ChallengeModule | `0xd7ca8042c236b9c29cbac8c192100825f5969a0d` | `0x4ecfc11a…2885534cb5` |
+| MockLendingPool | `0xf2e79aa5f3344992fca9f4ff5a4736716114e0d7` | `0x26de7a9b…3feea06378` |
+
+(Full hashes in `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`,
+gitignored.) Explorer: `https://testnet.monadscan.com/address/<addr>`.
+Sourcify: `perfect` match on all five (chain 10143).
+
+Operator steps done: pool funded with 7 MON
+(`0xb3e727e3…65dd83`), `registerAsAttester` bonded 5 MON
+(`0x4771a610…3eef9f7ddf65dd83`) — pool holds ~2 MON loan capital and
+`isActiveAttester(pool) == true`. Bond scale: TESTNET-SCALED
+(MIN_BOND 5, CHALLENGER_BOND 0.5 MON; production PRD §9: 50 / 5).
+Deployer change: ~1.6 MON left. Demo persona wallets self-fund their
+own 5 MON bonds from individual faucet claims.
+
 ## In progress right now
 
-None — ticket 02 committed locally (`d2ede33`, `d269a64`), unpushed.
-Next: ticket 03 (testnet deploy — needs funded deployer key).
+None — ticket 03 deployed + committed locally, unpushed.
+Next: ticket 04 (ABI export) + ticket 05 (live slash proof, needs a
+funded challenger wallet + a registered demo attester).
 
 ## Blocked / waiting on
 
