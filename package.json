@@ -1,7 +1,7 @@
 {
   "name": "credent",
   "private": true,
-  "workspaces": ["frontend", "indexer", "shared"],
+  "workspaces": ["frontend", "indexer", "shared", "apps/*"],
   "scripts": {
     "abis": "bash contracts/script/export-abis.sh",
     "contracts:build": "bun --cwd contracts forge build",
