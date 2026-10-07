@@ -51,6 +51,23 @@ Initial scaffolding push (all on `origin/main`):
     (CNA dropped `frontend/AGENTS.md` nextjs-agent-rules — kept; its
     "read dist/docs first" rule was followed for the App Router code.)
   - `bun.lock` + `contracts/foundry.lock` committed (deterministic installs).
+- Slice 1 DONE (`88f4909` impl, `ee5be89` tests — both local, see push note):
+  `AttesterRegistry` (native-MON MIN_BOND 50e18, onlyChallengeModule
+  slash/adjustReputation, owner wiring only), `AttestationRegistry`
+  (commitments only, active-attester gate, CHALLENGED/SLASHED marks,
+  signature-proven subject disputes), `ConsentRegistry` (EIP-712
+  `"VouchainConsent"/"1"` grants with scope tags + expiry + signer-only
+  revoke). `forge build` warning-free (incl. new forge lint rules),
+  31/31 `forge test` green, `Deploy.s.sol` dry-run green on local anvil.
+  - Mechanism fix vs PRD §9 (documented in code, own the divergence):
+    pseudonym is BOUND as keccak256(subject, attester) and both
+    grantAccess (+attester param, in signed struct) and
+    markDisputedBySubject (+attester param) verify it. Without this,
+    anyone could self-sign grants/disputes for anyone's pseudonym
+    (a valid sig over altered fields recovers a different key) —
+    caught by failing tests, fixed, now covered by passing ones.
+    Shared `eip712.ts` + consent skill updated to match.
+  - No testnet deploy yet — needs a funded deployer key (open blocker).
 - Product source of truth: `../prd/Credent-prd.md` (v3, read-only).
   Build specs live in PRD §§9–16; MVP scope in §17; demo script in §15.
 - Workflow layer (this change, uncommitted):
@@ -80,8 +97,9 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## In progress right now
 
-None — boilerplate committed and pushed. Next: step 4 (indexer/ skeleton
-+ `indexer` workspace entry) then slice 1 (registry logic).
+None — slice 1 committed locally (`88f4909`, `ee5be89`), unpushed.
+Next: slice 2 (ChallengeModule + MockLendingPool), then testnet deploy
+once a funded deployer key exists.
 
 ## Blocked / waiting on
 
