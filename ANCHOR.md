@@ -111,9 +111,12 @@ Indexer track — I1 DONE, I2 DONE (this line supersedes the pre-merge
 
 ## In progress right now
 
-Merged mate `origin/main` (frontend + Fastify API + simulator) with local
-(indexer I1/I2) — see merge commit. Next: verify the merged tree builds
-green everywhere, read INTERFACES.md, then I3 + integration rehearsal.
+Pulled mate `origin/main` and merged (`2b0fea0`, both tracks preserved,
+nothing lost — merge conflicts were ANCHOR.md + bun.lock only, both
+resolved). Merged tree verified: forge 52/52, shared/indexer/apps-api
+tsc clean, frontend builds (10 routes). BUT the merge surfaced real
+design divergences between INTERFACES.md and the deployed contracts
+(table filed with Santhosh — reconciling code waits on adjudication).
 
 ## Blocked / waiting on
 
