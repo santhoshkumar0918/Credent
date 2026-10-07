@@ -117,9 +117,17 @@ Contract track — COMPLETE (01 challenge, 02 pool, 03 deploy, 04 ABIs,
 
 Indexer track — frontier is **I1** (in progress, this session):
 
-- [ ] `I1-live-subscription` — poll the 5 live contracts from block
-  68939906 into Postgres, reorg-aware (10 confirmations); proof = local
-  tables already contain attestation 0 + challenge 1
+- [ ] `I1-live-subscription` — PARTIAL (code committed `852eab8`, running
+  proven, full catch-up pending): polls the 5 live contracts from block
+  68939906 in 100-block ranges (Monad RPC cap), 10-confirmation safety,
+  cursor persisted, RPC failures back off without losing place. Proven so
+  far: schema applies, pool attester row ingested live
+  (`0xf2e79a…0d7`, rep 0, active), cursor advancing (68944806 at pause).
+  Attestation/challenge rows land as the cursor passes the ProveSlash
+  blocks — not yet observed, no bug evidenced.
+  Local-env note: this machine runs its own Postgres on 5432, so the
+  compose DB was proven on a 5433 override (`/tmp` file, NOT committed);
+  run with `DATABASE_URL=...localhost:5433...` until ports are reconciled.
 - [ ] `I2-credit-api` ← I1 — 3 PRD §11 routes with LIVE on-chain consent
   checks (Redis caches tokens only); grant → data, no grant → 403
 - [ ] `I3-evidence-pinning` — parallel, no blockers — Pinata adapter
@@ -127,9 +135,10 @@ Indexer track — frontier is **I1** (in progress, this session):
 
 ## In progress right now
 
-I1 (indexer-aggregator-agent): real `subscriber.ts` + `db.ts` against
-local Postgres (`docker compose up`), then prove ingestion of the live
-chain history.
+PAUSED by Santhosh — I1 subscriber code is committed; a proving run is
+mid-catch-up (cursor 68944806, pool row ingested). Resume: re-run the
+subscriber to full head, confirm attestation 0 + challenge 1 rows, then
+close I1 and start I2.
 
 ## Blocked / waiting on
 
