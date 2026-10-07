@@ -2,162 +2,152 @@
 
 > This file is context, not instructions. Rules and routing live in
 > AGENTS.md. It answers "where are we right now" and is updated at the
-> end of every work session so a fresh agent can resume from it alone.
+> end of every work session so a fresh agent — or a teammate pulling
+> cold — resumes from this file alone, without re-deriving anything.
 
-**Last updated:** 2026-10-06 — core boilerplate (steps 0–3) built with
-official inits, verified green, committed + pushed as one commit (see
-"Latest pushed changes"). Toolchain: Foundry v1.8.5 (fresh `foundryup`
-install), Bun v1.3.14, Next 16.3.8 + React 19 + Tailwind v4 (CNA),
-wagmi v3 + viem 2.57.3 + react-query 5.104, OZ contracts v5.7.0 (pinned
-tag), forge-std v1.17.0.
+**Last updated:** 2026-10-07 — contract track 5/5 COMPLETE and pushed
+(live on Monad testnet, slash proven on-chain). Indexer track raised
+(I1–I3); I1 in progress. Test suite: 52 forge tests green.
+Deployer key retired; 3 demo wallets funded, keys in gitignored
+`contracts/.env.demo` (deleted after ticket 05 — see history).
+
+## Start here (fresh agent or teammate pull)
+
+Read in this order: (1) this file, (2) `AGENTS.md` (rules + which
+subagent owns what), (3) `README.md` (product + diagrams), (4) skill
+`vouchain-dev` (project map), (5) `../prd/Credent-prd.md` (source of
+truth, read-only). Then check `git log --oneline` against "Latest
+pushed changes" below — if they match, you are current.
+
+## Where things live (file guide — what was built, and in which commit)
+
+- `contracts/src/` — 5 Solidity contracts (Foundry, solc 0.8.28).
+  `AttesterRegistry` + `AttestationRegistry` + `ConsentRegistry`
+  (`88f4909`), `ChallengeModule` (`7482912`), `MockLendingPool`
+  (`d2ede33`). Deps as git submodules: `lib/forge-std v1.17.0`,
+  `lib/openzeppelin-contracts v5.7.0` (pinned tag). Tests in
+  `contracts/test/` — 52 green (`ee5be89`, `09ac15b`, `d269a64`).
+  Deploy + prove scripts in `contracts/script/`
+  (`Deploy.s.sol`, `ProveSlash.s.sol`).
+- `contracts/foundry.toml` — solc/cancun, `monad_testnet` (chain 10143)
+  + `anvil` RPC endpoints. Broadcast artifacts under
+  `contracts/broadcast/` (gitignored).
+- `shared/src/` — canonical TS package: `types.ts` (EventType + index
+  order matching the `.sol` enum), `commitments.ts` (THE hasher —
+  `encodeAbiParameters`, never `encodePacked`), `eip712.ts` (grant /
+  disclosure types + `scopeTag()`), `constants.ts` (chain 10143 + live
+  deployed addresses), `abis.ts` + `abis/*.ts` (regenerated via
+  `bun run abis`, ticket 04).
+- `frontend/` — Next 16.3.8 + React 19 + Tailwind v4 (official
+  `create-next-app`), wagmi v3 + viem 2 + react-query 5.
+  `lib/wagmi.ts` (Monad testnet chain), `lib/contracts.ts` (live
+  addresses + ABIs, single import point), home + 6 placeholder routes.
+  `bun run build` green.
+- `indexer/` — Node/TS service (skeleton `34bf536`, now being built):
+  `subscriber.ts`, `db.ts`, `api.ts`, `consent.ts`, `ipfs.ts`,
+  `schema.sql` (attesters/attestations/consents/challenges/cursor).
+- `.opencode/agents/` — 8 subagents (5 builders + 3 support).
+  `.opencode/skills/` — 11 skills (6 Vouchain domain + 5 shared).
+- `docs/<track>/issues/` — working ticket files (GITIGNORED, never
+  pushed). Ticket *summaries* live in this file (below) — that is the
+  committed record.
+- `contracts/.env.demo` — demo-wallet keys, chmod 600, GITIGNORED.
+  Deleted after use. Real `.env` never exists in git (rule 6).
 
 ## Latest pushed changes — read this when you pull
 
-Initial scaffolding push (all on `origin/main`):
-- `a6349c5` root `.gitignore` (secrets, build outputs, `docs/` scratch).
-- `38cca85` `AGENTS.md` routing + `ANCHOR.md` state contract.
-- `6e945a8` 8 subagents under `.opencode/agents/`.
-- `db6a829` 6 Vouchain domain skills.
-- `c9aa92a` shared skills incl. canonical `ui-ux-pro-max` installed via
-  `npx skills add .../ui-ux-pro-max-skill` (installer dropped it in
-  `.agents/` + root `skills-lock.json`; consolidated into
-  `.opencode/skills/` + `.opencode/skills-lock.json`, strays removed).
+Everything below is on `origin/main`. Commit messages are
+`<scope>: <what>` (scope = subagent minus `-agent`, or `workflow:`/`docs:`).
+
+- `a6349c5` → `c9aa92a` — workflow scaffolding: root `.gitignore`,
+  `AGENTS.md` + `ANCHOR.md`, 8 subagents, 6 domain skills, shared
+  skills incl. canonical `ui-ux-pro-max` (via `npx skills add`).
+- `215e829` — `README.md` (architecture + 5 mermaid diagrams + codebase
+  blueprint). `6cc102f`, `c851338` — ANCHOR checkpoints.
+- `ba5f290` — boilerplate monorepo: `forge init contracts`,
+  root Bun workspaces, `shared/` (types/hasher/eip712/constants),
+  Next.js frontend skeleton. Toolchain installed here: Foundry v1.8.5,
+  Bun v1.3.14, OZ v5.7.0.
+- `34bf536` — indexer skeleton + workspace wiring + graph schema.
+- `88f4909` / `ee5be89` — slice 1: 3 registries + 31 tests. Includes
+  the pseudonym-binding mechanism fix (grants/disputes prove
+  `keccak256(subject, attester)` on-chain; PRD §9 divergences documented
+  in code, not silent).
+- `7482912` / `09ac15b` — ticket 01: ChallengeModule + 10 tests (41 total).
+- `d2ede33` / `d269a64` — ticket 02: MockLendingPool + 11 tests (52 total).
+- `419ae4e` — TESTNET-SCALED bonds (MIN_BOND 5 / CHALLENGER_BOND 0.5 MON,
+  10:1 ratio kept; production PRD §9: 50 / 5); tests read constants.
+- `4840924` — ticket 03: testnet deploy record (addresses below).
+- `02b113b` — ticket 04: ABI export pipeline + frontend wiring.
+- `34c1a3d` — ticket 05: ProveSlash script.
+- `addea2f` — ticket 05 executed: SLASH PROVEN on testnet.
+- `99bf5af` — demo wallets + ANCHOR checkpoint (pushed).
 
 ## What is true now (verified)
 
-- Boilerplate steps 0–3 (single commit, pushed — hash in "Latest pushed
-  changes" above):
-  - Step 0: root Bun workspaces (`frontend`, `shared`; `indexer` joins
-    in step 4), `tsconfig.base.json`, `.env.example`, `docker-compose.yml`
-    (postgres:16 + redis:7), root `.gitignore` (+Foundry artifacts;
-    `.env.example` force-included, real `.env` stays ignored).
-  - Step 1: `forge init contracts --no-git`; deps as git submodules —
-    `forge-std v1.17.0`, `openzeppelin-contracts v5.7.0` (pinned tag);
-    `foundry.toml` (solc 0.8.28, cancun, monad_testnet + anvil RPC
-    endpoints); `remappings.txt`; 5 empty contract shells in `src/`;
-    `script/Deploy.s.sol` shell; default Counter files removed.
-    `forge build` green, `forge test` exit 0 (no tests yet — expected).
-  - Step 2: `shared/` package (viem 2.57.3) — `types.ts` (EventType +
-    index order matching future .sol enum), `commitments.ts` (canonical
-    `encodeAbiParameters` hasher — never `encodePacked`), `eip712.ts`
-    (consent/disclosure types + `scopeTag()`), `constants.ts` (chain
-    10143, empty address slots). `tsc --noEmit` clean.
-  - Step 3: `bunx create-next-app` frontend (Next 16.3.8, React 19,
-    Tailwind v4) + wagmi 3 / react-query 5.104; `lib/wagmi.ts`
-    (`defineChain` Monad testnet 10143, injected connector);
-    `app/providers.tsx`; home + 6 placeholder routes
-    (attester/record/consent/lender/challenge/explorer); `@shared/*`
-    path alias. `bun run build` green — 7 routes prerendered.
-    (CNA dropped `frontend/AGENTS.md` nextjs-agent-rules — kept; its
-    "read dist/docs first" rule was followed for the App Router code.)
-  - `bun.lock` + `contracts/foundry.lock` committed (deterministic installs).
-- Slice 1 DONE (`88f4909` impl, `ee5be89` tests — both local, see push note):
-  `AttesterRegistry` (native-MON MIN_BOND 50e18, onlyChallengeModule
-  slash/adjustReputation, owner wiring only), `AttestationRegistry`
-  (commitments only, active-attester gate, CHALLENGED/SLASHED marks,
-  signature-proven subject disputes), `ConsentRegistry` (EIP-712
-  `"VouchainConsent"/"1"` grants with scope tags + expiry + signer-only
-  revoke). `forge build` warning-free (incl. new forge lint rules),
-  31/31 `forge test` green, `Deploy.s.sol` dry-run green on local anvil.
-  - Mechanism fix vs PRD §9 (documented in code, own the divergence):
-    pseudonym is BOUND as keccak256(subject, attester) and both
-    grantAccess (+attester param, in signed struct) and
-    markDisputedBySubject (+attester param) verify it. Without this,
-    anyone could self-sign grants/disputes for anyone's pseudonym
-    (a valid sig over altered fields recovers a different key) —
-    caught by failing tests, fixed, now covered by passing ones.
-    Shared `eip712.ts` + consent skill updated to match.
-  - No testnet deploy yet — needs a funded deployer key (open blocker).
+- Toolchain: Foundry v1.8.5, Bun v1.3.14, Next 16.3.8 / React 19 /
+  Tailwind v4, wagmi 3 + viem 2.57.3 + react-query 5.104, OZ v5.7.0,
+  forge-std v1.17.0. `forge build` warning-free, 52/52 `forge test`
+  green, `shared` + `indexer` `tsc` clean, `next build` green.
+- Testnet deployment (2026-10-07, chain 10143, deploy block 68939906,
+  Sourcify `perfect` ×5). Explorer: `testnet.monadscan.com/address/<addr>`.
+
+| Contract | Address |
+|---|---|
+| AttesterRegistry | `0x84a84cfe2fe62499ba0fdf9cf49f617865f4152d` |
+| AttestationRegistry | `0x7fceaa85c5f74d54554bffd46a41653fd03da962` |
+| ConsentRegistry | `0x6f47a618213d44afdaeb605e3262e2f874471b74` |
+| ChallengeModule | `0xd7ca8042c236b9c29cbac8c192100825f5969a0d` |
+| MockLendingPool | `0xf2e79aa5f3344992fca9f4ff5a4736716114e0d7` |
+
+- Pool funded (7 MON in, 5 bonded, ~2 loan capital, active attester).
+  Deployer `0x9f60…C22900` holds ~1.6 MON; key retired.
+- Ticket 05 proven on-chain: attestation 0 SLASHED, attester bond
+  4.5 MON, reputation −10 (tx hashes in
+  `docs/contract-track/issues/05-live-slash-proof.md`, gitignored).
+- Demo wallets (keys ONLY in gitignored `contracts/.env.demo`):
+  attester `0xDCBd…b2Ed2D` (10 MON), subject `0x9441…de28` (5 MON),
+  challenger `0xC3e9…847f6` (10 MON).
 - Product source of truth: `../prd/Credent-prd.md` (v3, read-only).
-  Build specs live in PRD §§9–16; MVP scope in §17; demo script in §15.
-- Workflow layer (this change, uncommitted):
-  - `AGENTS.md` — routing, 11 non-negotiable rules, 8-agent roster,
-    11-skill roster, coding standards, done/escalation/git rules.
-  - `.opencode/agents/` — 5 builders
-    (`attestation-contracts-agent`, `challenge-lending-agent`,
-    `indexer-aggregator-agent`, `frontend-agent`, `qa-e2e-agent`) + 3
-    support (`research-agent`, `code-review-agent`, `git-commit-agent`).
-  - `.opencode/skills/` — 6 Vouchain domain skills
-    (`solidity-commitment-attestation`, `consent-disclosure-eip712`,
-    `challenge-slashing`, `attestation-indexing`,
-    `attestation-trust-review`, `vouchain-dev`) + 5 shared
-    (`research-lookup-protocol`, `code-review-checklist`,
-    `git-commit-conventions`, `ui-ux-pro-max`, `to-tickets`).
-- Target chain: Monad testnet. Target contracts toolchain: Foundry +
-  Solidity + OpenZeppelin (`AccessControl`, `ReentrancyGuard`).
-- Nothing else is verified — no contracts written, nothing deployed,
-  no tests exist.
 
-## Current phase
+## Tracks and tickets (summaries — working files under `docs/`, gitignored)
 
-Phase 0 — scaffolding. Next is the first vertical slice: the
-commitment-based attestation core on-chain
-(`AttesterRegistry` + `AttestationRegistry` + deploy + forge tests on
-Monad testnet), per PRD §9 and AGENTS.md §4.
+Contract track — COMPLETE (01 challenge, 02 pool, 03 deploy, 04 ABIs,
+05 live slash; hashes in "Latest pushed" above).
 
-## Contract track (tickets live in `docs/contract-track/issues/` — gitignored)
+Indexer track — frontier is **I1** (in progress, this session):
 
-Frontier: contract track COMPLETE. Next: frontend/indexer slices (new tickets).
-
-- [x] `01-challenge-module` — bonded challenges + slash settlement + registry wiring (`7482912` impl, `09ac15b` tests)
-- [x] `02-mock-lending-pool` — demo loop: transparent score → gated loan → repay-as-attestation (`d2ede33` impl, `d269a64` tests)
-- [x] `03-testnet-deploy` — live on Monad testnet 10143, Sourcify-verified `perfect` ×5, pool funded + bonded
-- [x] `04-abi-export` — `bun run abis` regenerates `shared/src/abis/*.ts`; `frontend/lib/contracts.ts` live (`02b113b`)
-- [x] `05-live-slash-proof` — executed 2026-10-07: register → plant → grant → challenge → resolve → claim, all green; attestation 0 SLASHED, bond 4.5, rep −10 (tx hashes in ticket file)
-
-## Testnet deployment (2026-10-07, chain 10143)
-
-Deployer `0x9f60505f51b9a0a237Ce9b2118B91E020eC22900` (testnet-only key,
-single-use — retired after this deploy; never committed, history scrubbed).
-
-| Contract | Address | Deploy tx |
-|---|---|---|
-| AttesterRegistry | `0x84a84cfe2fe62499ba0fdf9cf49f617865f4152d` | `0x0dd79dcc…73828339` |
-| AttestationRegistry | `0x7fceaa85c5f74d54554bffd46a41653fd03da962` | `0xd45680ab…61cf86bea22` |
-| ConsentRegistry | `0x6f47a618213d44afdaeb605e3262e2f874471b74` | `0xaf7717e9…944c3b69f` |
-| ChallengeModule | `0xd7ca8042c236b9c29cbac8c192100825f5969a0d` | `0x4ecfc11a…2885534cb5` |
-| MockLendingPool | `0xf2e79aa5f3344992fca9f4ff5a4736716114e0d7` | `0x26de7a9b…3feea06378` |
-
-(Full hashes in `contracts/broadcast/Deploy.s.sol/10143/run-latest.json`,
-gitignored.) Explorer: `https://testnet.monadscan.com/address/<addr>`.
-Sourcify: `perfect` match on all five (chain 10143).
-
-Operator steps done: pool funded with 7 MON
-(`0xb3e727e3…65dd83`), `registerAsAttester` bonded 5 MON
-(`0x4771a610…3eef9f7ddf65dd83`) — pool holds ~2 MON loan capital and
-`isActiveAttester(pool) == true`. Bond scale: TESTNET-SCALED
-(MIN_BOND 5, CHALLENGER_BOND 0.5 MON; production PRD §9: 50 / 5).
-Deployer change: ~1.6 MON left. Demo persona wallets self-fund their
-own 5 MON bonds from individual faucet claims.
+- [ ] `I1-live-subscription` — poll the 5 live contracts from block
+  68939906 into Postgres, reorg-aware (10 confirmations); proof = local
+  tables already contain attestation 0 + challenge 1
+- [ ] `I2-credit-api` ← I1 — 3 PRD §11 routes with LIVE on-chain consent
+  checks (Redis caches tokens only); grant → data, no grant → 403
+- [ ] `I3-evidence-pinning` — parallel, no blockers — Pinata adapter
+  behind `EvidenceBlob`; builds keyless, runs on `PINATA_JWT`
 
 ## In progress right now
 
-None — contract track complete, committed locally, unpushed.
-Next: raise frontend + indexer tickets (slices 3–4), then build.
+I1 (indexer-aggregator-agent): real `subscriber.ts` + `db.ts` against
+local Postgres (`docker compose up`), then prove ingestion of the live
+chain history.
 
 ## Blocked / waiting on
 
-- Santhosh to confirm: (1) Monad testnet RPC + faucet access for the
-  deployer wallet; (2) whether `contracts/` should start as Foundry-only
-  or with an existing template; (3) go-ahead to run `code-review-agent`
-  → `git-commit-agent` on this scaffolding as the first commit.
+- Nothing code-blocking. Next external need: `PINATA_JWT` for I3
+  runtime (build needs no key) and Santhosh's browser-testing account
+  for the frontend slice.
 
 ## Next task
 
-1. Review this scaffolding (`code-review-agent`), commit it
-   (`git-commit-agent`), update this file with the commit hash.
-2. Then start the contracts slice: `attestation-contracts-agent` builds
-   `AttesterRegistry.sol` + `AttestationRegistry.sol` (+ `ConsentRegistry.sol`)
-   per PRD §9, `forge test` green, deployed + verified on Monad testnet,
-   addresses recorded here.
-3. Only after (2): `challenge-lending-agent` (`ChallengeModule` +
-   `MockLendingPool`), then `indexer-aggregator-agent`, then
-   `frontend-agent`, with `qa-e2e-agent` rehearsing the PRD §15 demo
-   (happy path + live-slash climax) last.
+1. Finish I1 (prove rows), commit, then I2 (API), I3 parallel.
+2. Then: frontend track tickets (slice 4 — 6 screens on live contracts),
+   then qa-e2e rehearsal of the PRD §15 demo.
 
-Stack/completion notes for whoever resumes:
+Standing notes for whoever resumes:
 - PRD is at `../prd/Credent-prd.md` — read-only, never edited by agents.
 - Load skill `vouchain-dev` at session start for the project map.
 - `to-tickets` runs only when the user says "tickets" / `/to-tickets`.
 - Load `ui-ux-pro-max` for every frontend slice.
 - Do not push until explicitly asked (AGENTS.md §10).
+- Testnet keys: env vars or gitignored files only — never chat logs
+  beyond first receipt, never committed. Retire after use.
