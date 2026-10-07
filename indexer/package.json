@@ -4,9 +4,13 @@
   "private": true,
   "type": "module",
   "main": "src/index.ts",
+  "scripts": {
+    "start": "bun src/index.ts"
+  },
   "dependencies": {
     "ioredis": "^6.0.0",
     "pg": "^8.23.1",
+    "shared": "workspace:*",
     "viem": "^2.57.3"
   },
   "devDependencies": {
