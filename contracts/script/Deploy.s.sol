@@ -6,12 +6,15 @@ import {AttesterRegistry} from "../src/AttesterRegistry.sol";
 import {AttestationRegistry} from "../src/AttestationRegistry.sol";
 import {ConsentRegistry} from "../src/ConsentRegistry.sol";
 import {ChallengeModule} from "../src/ChallengeModule.sol";
+import {MockLendingPool} from "../src/MockLendingPool.sol";
 
 // Slice 1 deployed the registries in dependency order:
 // AttesterRegistry → AttestationRegistry → ConsentRegistry, then wired
 // the attestation registry into the attester registry for count notes.
 // Ticket 01 appends: ChallengeModule + setChallengeModule on all three.
-// Ticket 02 appends: MockLendingPool. Every address is recorded in ANCHOR.md.
+// Ticket 02 appends: MockLendingPool (funding + registerAsAttester are
+// operator steps post-deploy, not part of this script).
+// Every address is recorded in ANCHOR.md.
 //
 // Usage:
 //   forge script script/Deploy.s.sol --rpc-url monad_testnet --broadcast
@@ -34,11 +37,14 @@ contract Deploy is Script {
         );
         attesterRegistry.setChallengeModule(address(challengeModule));
         attestationRegistry.setChallengeModule(address(challengeModule));
+        MockLendingPool pool =
+            new MockLendingPool(address(attesterRegistry), address(attestationRegistry));
         vm.stopBroadcast();
 
         console.log("AttesterRegistry:    ", address(attesterRegistry));
         console.log("AttestationRegistry: ", address(attestationRegistry));
         console.log("ConsentRegistry:     ", address(consentRegistry));
         console.log("ChallengeModule:     ", address(challengeModule));
+        console.log("MockLendingPool:     ", address(pool));
     }
 }
