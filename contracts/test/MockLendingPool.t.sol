@@ -121,7 +121,7 @@ contract MockLendingPoolTest is Test {
         pool.recordRepayment{value: 1e18}(999);
     }
 
-    function test_PoolIsBondedAttester() public {
+    function test_PoolIsBondedAttester() public view {
         assertTrue(attesterRegistry.isActiveAttester(address(pool)));
     }
 }
