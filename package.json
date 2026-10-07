@@ -1,7 +1,7 @@
 {
   "name": "credent",
   "private": true,
-  "workspaces": ["frontend", "indexer", "shared"],
+  "workspaces": ["frontend", "indexer", "shared", "apps/*"],
   "scripts": {
     "contracts:build": "bun --cwd contracts forge build",
     "contracts:test": "bun --cwd contracts forge test"
