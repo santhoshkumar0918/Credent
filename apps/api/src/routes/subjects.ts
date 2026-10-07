@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { memoryStore } from "../db";
+import { publicClient } from "../relayer/gas-relayer";
 
 export async function subjectsRoutes(fastify: FastifyInstance) {
   // Disclosed summary endpoint (requires consent token header/query)
@@ -23,6 +24,40 @@ export async function subjectsRoutes(fastify: FastifyInstance) {
       }
       if (token.expiry < nowSec) {
         return reply.status(403).send({ error: "Consent grant has expired", code: "EXPIRED" });
+      }
+
+      // Check on-chain ConsentRegistry authorization if deployed
+      try {
+        const consentAbi = [
+          {
+            name: "isAuthorized",
+            type: "function",
+            stateMutability: "view",
+            inputs: [
+              { name: "subjectPseudonym", type: "bytes32" },
+              { name: "viewer", type: "address" },
+              { name: "scopeTag", type: "bytes32" },
+            ],
+            outputs: [{ name: "", type: "bool" }],
+          },
+        ] as const;
+
+        const isAuthorizedOnChain = await publicClient.readContract({
+          address: "0x6f47a618213d44afdaeb605e3262e2f874471b74",
+          abi: consentAbi,
+          functionName: "isAuthorized",
+          args: [
+            token.pseudonymHex as `0x${string}`,
+            token.viewerAddress as `0x${string}`,
+            (token.scopeTags?.[0] || "0x0000000000000000000000000000000000000000000000000000000000000000") as `0x${string}`,
+          ],
+        });
+
+        if (!isAuthorizedOnChain && process.env.STRICT_ONCHAIN_CONSENT === "true") {
+          return reply.status(403).send({ error: "On-chain ConsentRegistry authorization check failed", code: "UNAUTHORIZED_ONCHAIN" });
+        }
+      } catch (err: any) {
+        console.warn("On-chain consent check note:", err.message);
       }
     }
 

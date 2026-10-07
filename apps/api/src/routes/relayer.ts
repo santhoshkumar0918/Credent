@@ -4,7 +4,7 @@ import { submitRelayedTransaction } from "../relayer/gas-relayer";
 
 const RelayerSubmitSchema = z.object({
   targetContract: z.string().startsWith("0x"),
-  functionName: z.enum(["grantAccess", "revokeAccess", "openChallenge"]),
+  functionName: z.enum(["grantAccess", "revokeAccess"]),
   args: z.array(z.any()),
   userSignature: z.string().startsWith("0x"),
 });

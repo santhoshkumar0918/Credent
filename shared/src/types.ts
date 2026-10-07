@@ -20,6 +20,15 @@ export const EVENT_TYPE_INDEX: Record<EventType, number> = {
   UTILITY_BILL: 4,
 };
 
+export const OUTCOME_CODES = {
+  ON_TIME: 0,
+  LATE: 1,
+  MISSED: 2,
+  DEFAULTED: 3,
+} as const;
+
+export type OutcomeCode = keyof typeof OUTCOME_CODES;
+
 export type Hex = `0x${string}`;
 
 export interface CommitmentInput {
@@ -29,6 +38,8 @@ export interface CommitmentInput {
   /** Base units (see parseAmount). Never a float. */
   amount: bigint;
   onTime: boolean;
+  /** Outcome code (0=ON_TIME, 1=LATE, 2=MISSED, 3=DEFAULTED) */
+  outcomeCode?: number;
   /** Unix seconds. */
   timestamp: bigint;
   /** Fresh 256-bit randomness per attestation. */

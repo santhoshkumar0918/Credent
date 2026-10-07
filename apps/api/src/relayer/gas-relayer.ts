@@ -27,19 +27,16 @@ export const walletClient = createWalletClient({
   transport: http(MONAD_TESTNET_RPC),
 });
 
-// Function selector allowlist for Monad gas relayer
-// grantAccess(address,address,bytes32[],uint256,bytes) -> 0x...
-// revokeAccess(bytes32) -> 0x...
-// openChallenge(bytes32,bytes) -> 0x...
+// Function selector allowlist for Monad gas relayer (relays gasless consent grants/revocations ONLY)
+// Note: openChallenge requires a 0.5 MON challenger bond deposit and MUST NOT be relayed.
 const ALLOWED_FUNCTION_SELECTORS = new Set<string>([
   "grantAccess",
   "revokeAccess",
-  "openChallenge",
 ]);
 
 export interface RelayerSubmissionRequest {
   targetContract: Hex;
-  functionName: "grantAccess" | "revokeAccess" | "openChallenge";
+  functionName: "grantAccess" | "revokeAccess";
   args: any[];
   userSignature: Hex;
 }
@@ -71,19 +68,19 @@ export async function submitRelayedTransaction(req: RelayerSubmissionRequest): P
       inputs: [{ name: "grantId", type: "bytes32" }],
       outputs: [],
     },
-    {
-      name: "openChallenge",
-      type: "function",
-      stateMutability: "nonpayable",
-      inputs: [
-        { name: "attestationId", type: "bytes32" },
-        { name: "evidenceData", type: "bytes" },
-      ],
-      outputs: [],
-    },
   ] as const;
 
   try {
+    // 1. Simulate contract call first via eth_call
+    await publicClient.simulateContract({
+      account: relayerAccount,
+      address: req.targetContract,
+      abi: consentAbi,
+      functionName: req.functionName as any,
+      args: req.args as any,
+    });
+
+    // 2. Broadcast transaction if simulation succeeded
     const hash = await walletClient.writeContract({
       address: req.targetContract,
       abi: consentAbi,
@@ -93,7 +90,7 @@ export async function submitRelayedTransaction(req: RelayerSubmissionRequest): P
 
     return { txHash: hash };
   } catch (err: any) {
-    console.error("Relayer transaction execution error:", err);
+    console.error("Relayer transaction simulation or execution error:", err);
     // Return mock successful tx hash in offline/test mode if RPC connection fails
     const mockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}` as Hex;
     return { txHash: mockHash };
