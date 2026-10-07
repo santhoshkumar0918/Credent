@@ -42,8 +42,10 @@ contract ChallengeModule is Ownable, ReentrancyGuard {
         bool claimed;
     }
 
-    /// @notice Demo values from PRD §9. Revisited before any real deployment.
-    uint256 public constant CHALLENGER_BOND = 5e18;
+    /// @notice TESTNET-SCALED (production values per PRD §9: 5e18 bond).
+    /// Preserves the 10:1 MIN_BOND:CHALLENGER_BOND ratio. See MIN_BOND note
+    /// in AttesterRegistry for the rationale.
+    uint256 public constant CHALLENGER_BOND = 5e17;
     uint256 public constant CHALLENGE_WINDOW = 7 days;
     int256 public constant REPUTATION_PENALTY = -10;
     int256 public constant REPUTATION_CREDIT = 2;

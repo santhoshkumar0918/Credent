@@ -13,6 +13,7 @@ contract AttestationRegistryTest is Test {
     AttestationRegistry attestationRegistry;
     address attester = makeAddr("attester");
     address outsider = makeAddr("outsider");
+    uint256 MIN;
 
     bytes32 constant PSEUDO = keccak256("subject-relationship-1");
     bytes32 constant COMMIT = keccak256("commitment-preimage");
@@ -25,8 +26,13 @@ contract AttestationRegistryTest is Test {
         attesterRegistry.setChallengeModule(address(this));
         attestationRegistry.setChallengeModule(address(this));
         vm.deal(attester, 100e18);
+        // Cache first: an external call inside register{value: ...} would
+        // consume the prank below and register the WRONG address.
+        MIN = attesterRegistry.MIN_BOND();
         vm.prank(attester);
-        attesterRegistry.register{value: 50e18}(AttesterRegistry.AttesterType.PLATFORM);
+        attesterRegistry.register{value: MIN}(
+            AttesterRegistry.AttesterType.PLATFORM
+        );
     }
 
     function test_AttestStoresCommitmentOnly() public {
@@ -120,7 +126,7 @@ contract AttestationRegistryTest is Test {
             uint8(AttestationRegistry.AttestationStatus.DISPUTED_BY_SUBJECT)
         );
         // Bond untouched — this path marks, never slashes.
-        assertEq(attesterRegistry.getAttester(attester).bond, 50e18);
+        assertEq(attesterRegistry.getAttester(attester).bond, MIN);
     }
 
     function test_DisputeStrangerReverts() public {

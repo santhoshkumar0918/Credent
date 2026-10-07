@@ -20,6 +20,8 @@ contract ChallengeModuleTest is Test {
     address subject;
     uint256 subjectKey;
     bytes32 PSEUDO;
+    uint256 MIN;
+    uint256 CBOND;
 
     bytes32 constant COMMIT = keccak256("commitment-preimage");
     bytes32 constant EVIDENCE = keccak256("ipfs-cid");
@@ -41,8 +43,10 @@ contract ChallengeModuleTest is Test {
         attestationRegistry.setChallengeModule(address(challengeModule));
         vm.deal(attester, 100e18);
         vm.deal(lender, 100e18);
+        MIN = attesterRegistry.MIN_BOND();
+        CBOND = challengeModule.CHALLENGER_BOND();
         vm.prank(attester);
-        attesterRegistry.register{value: 50e18}(AttesterRegistry.AttesterType.PLATFORM);
+        attesterRegistry.register{value: MIN}(AttesterRegistry.AttesterType.PLATFORM);
         (subject, subjectKey) = makeAddrAndKey("subject");
         PSEUDO = keccak256(abi.encode(subject, attester));
     }
@@ -89,7 +93,7 @@ contract ChallengeModuleTest is Test {
     function test_ChallengerWinsFullFlow() public {
         uint256 id = _attestAndGrant();
         vm.prank(lender);
-        uint256 cid = challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        uint256 cid = challengeModule.openChallenge{value: CBOND}(id, PROOF);
         assertEq(
             uint8(attestationRegistry.getAttestation(id).status),
             uint8(AttestationRegistry.AttestationStatus.CHALLENGED)
@@ -99,20 +103,20 @@ contract ChallengeModuleTest is Test {
         uint256 lenderBefore = lender.balance;
         vm.prank(arbiter);
         challengeModule.resolve(cid, true);
-        // Slash: min(50, 5) = 5 straight to challenger; reputation cut; SLASHED.
-        assertEq(attesterRegistry.getAttester(attester).bond, 45e18);
+        // Slash: min(bond, CBOND) straight to challenger; reputation cut; SLASHED.
+        assertEq(attesterRegistry.getAttester(attester).bond, MIN - CBOND);
         assertEq(attesterRegistry.getAttester(attester).reputationScore, -10);
         assertEq(
             uint8(attestationRegistry.getAttestation(id).status),
             uint8(AttestationRegistry.AttestationStatus.SLASHED)
         );
-        assertEq(lender.balance - lenderBefore, 5e18);
-        // Bond 45 < MIN_BOND 50 → deactivated.
+        assertEq(lender.balance - lenderBefore, CBOND);
+        // Bond below MIN → deactivated.
         assertFalse(attesterRegistry.isActiveAttester(attester));
         // Claim: original bond back, exactly once.
         vm.prank(lender);
         challengeModule.claim(cid);
-        assertEq(lender.balance - lenderBefore, 10e18);
+        assertEq(lender.balance - lenderBefore, 2 * CBOND);
         vm.prank(lender);
         vm.expectRevert(ChallengeModule.AlreadyClaimed.selector);
         challengeModule.claim(cid);
@@ -121,7 +125,7 @@ contract ChallengeModuleTest is Test {
     function test_AttesterWinsClearsAndCompensates() public {
         uint256 id = _attestAndGrant();
         vm.prank(lender);
-        uint256 cid = challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        uint256 cid = challengeModule.openChallenge{value: CBOND}(id, PROOF);
         vm.prank(arbiter);
         challengeModule.resolve(cid, false);
         // Cleared to ACTIVE, reputation credit, attester claims forfeited bond.
@@ -133,7 +137,7 @@ contract ChallengeModuleTest is Test {
         uint256 attesterBefore = attester.balance;
         vm.prank(attester);
         challengeModule.claim(cid);
-        assertEq(attester.balance - attesterBefore, 5e18);
+        assertEq(attester.balance - attesterBefore, CBOND);
     }
 
     function test_OpenWithoutGrantReverts() public {
@@ -145,14 +149,14 @@ contract ChallengeModuleTest is Test {
         vm.deal(grantless, 10e18);
         vm.prank(grantless);
         vm.expectRevert(ChallengeModule.NoValidGrant.selector);
-        challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        challengeModule.openChallenge{value: CBOND}(id, PROOF);
     }
 
     function test_OpenWithoutBondReverts() public {
         uint256 id = _attestAndGrant();
         vm.prank(lender);
         vm.expectRevert(ChallengeModule.InsufficientChallengerBond.selector);
-        challengeModule.openChallenge{value: 1e18}(id, PROOF);
+        challengeModule.openChallenge{value: CBOND - 1}(id, PROOF);
     }
 
     function test_OpenAfterWindowReverts() public {
@@ -160,28 +164,28 @@ contract ChallengeModuleTest is Test {
         vm.warp(block.timestamp + 8 days);
         vm.prank(lender);
         vm.expectRevert(ChallengeModule.ChallengeWindowClosed.selector);
-        challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        challengeModule.openChallenge{value: CBOND}(id, PROOF);
     }
 
     function test_OpenNonexistentReverts() public {
         vm.prank(lender);
         vm.expectRevert(AttestationRegistry.AttestationNotFound.selector);
-        challengeModule.openChallenge{value: 5e18}(999, PROOF);
+        challengeModule.openChallenge{value: CBOND}(999, PROOF);
     }
 
     function test_DoubleOpenReverts() public {
         uint256 id = _attestAndGrant();
         vm.prank(lender);
-        challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        challengeModule.openChallenge{value: CBOND}(id, PROOF);
         vm.prank(lender);
         vm.expectRevert(ChallengeModule.ChallengeAlreadyOpen.selector);
-        challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        challengeModule.openChallenge{value: CBOND}(id, PROOF);
     }
 
     function test_DefenseOnlyAttester() public {
         uint256 id = _attestAndGrant();
         vm.prank(lender);
-        uint256 cid = challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        uint256 cid = challengeModule.openChallenge{value: CBOND}(id, PROOF);
         vm.prank(lender);
         vm.expectRevert(ChallengeModule.NotAttester.selector);
         challengeModule.submitDefense(cid, EVIDENCE);
@@ -190,7 +194,7 @@ contract ChallengeModuleTest is Test {
     function test_ResolveOnlyArbiter() public {
         uint256 id = _attestAndGrant();
         vm.prank(lender);
-        uint256 cid = challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        uint256 cid = challengeModule.openChallenge{value: CBOND}(id, PROOF);
         vm.prank(lender);
         vm.expectRevert(ChallengeModule.NotArbiter.selector);
         challengeModule.resolve(cid, true);
@@ -199,7 +203,7 @@ contract ChallengeModuleTest is Test {
     function test_ClaimOnlyWinner() public {
         uint256 id = _attestAndGrant();
         vm.prank(lender);
-        uint256 cid = challengeModule.openChallenge{value: 5e18}(id, PROOF);
+        uint256 cid = challengeModule.openChallenge{value: CBOND}(id, PROOF);
         vm.prank(arbiter);
         challengeModule.resolve(cid, true);
         vm.prank(attester);
