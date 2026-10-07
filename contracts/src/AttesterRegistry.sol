@@ -25,8 +25,10 @@ contract AttesterRegistry is Ownable {
         bool active;
     }
 
-    /// @notice Demo value from PRD §9. Revisited before any real deployment.
-    uint256 public constant MIN_BOND = 50e18;
+    /// @notice TESTNET-SCALED for the faucet economy (production value per
+    /// PRD §9: 50e18). Testnet MON is valueless, so any stake is symbolic —
+    /// the bonding/slash/deactivate MECHANISM is unchanged.
+    uint256 public constant MIN_BOND = 5e18;
 
     address public challengeModule;
     address public attestationRegistry;

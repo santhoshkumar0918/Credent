@@ -6,9 +6,10 @@ export const MONAD_TESTNET_CHAIN_ID = 10143;
 export const MONAD_TESTNET_RPC_URL = "https://testnet-rpc.monad.xyz";
 export const MONAD_TESTNET_EXPLORER = "https://testnet.monadscan.com";
 
-/** Demo values from prd/Credent-prd.md §9 — revisited before mainnet. */
-export const MIN_BOND_LABEL = "50 (demo stablecoin units)";
-export const CHALLENGER_BOND_LABEL = "5 (demo stablecoin units)";
+/** TESTNET-SCALED for the faucet economy (production values per PRD §9:
+ *  MIN_BOND 50e18, CHALLENGER_BOND 5e18). Preserves the 10:1 ratio. */
+export const MIN_BOND_LABEL = "5 MON (TESTNET-SCALED; production PRD §9: 50)";
+export const CHALLENGER_BOND_LABEL = "0.5 MON (TESTNET-SCALED; production PRD §9: 5)";
 
 export const ADDRESSES: {
   attesterRegistry: `0x${string}` | "";
@@ -17,9 +18,9 @@ export const ADDRESSES: {
   challengeModule: `0x${string}` | "";
   mockLendingPool: `0x${string}` | "";
 } = {
-  attesterRegistry: "",
-  attestationRegistry: "",
-  consentRegistry: "",
-  challengeModule: "",
-  mockLendingPool: "",
+  attesterRegistry: "0x84a84cfe2fe62499ba0fdf9cf49f617865f4152d",
+  attestationRegistry: "0x7fceaa85c5f74d54554bffd46a41653fd03da962",
+  consentRegistry: "0x6f47a618213d44afdaeb605e3262e2f874471b74",
+  challengeModule: "0xd7ca8042c236b9c29cbac8c192100825f5969a0d",
+  mockLendingPool: "0xf2e79aa5f3344992fca9f4ff5a4736716114e0d7",
 };

@@ -49,3 +49,9 @@ CREATE TABLE IF NOT EXISTS challenges (
   status          TEXT NOT NULL DEFAULT 'OPEN',
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Subscriber cursor: last fully-ingested block (exclusive next start).
+CREATE TABLE IF NOT EXISTS indexer_cursor (
+  id           INTEGER PRIMARY KEY CHECK (id = 1),
+  block_number BIGINT NOT NULL
+);
