@@ -97,13 +97,13 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## Contract track (tickets live in `docs/contract-track/issues/` — gitignored)
 
-Frontier: **04-abi-export** (ticket 03 done this session — DEPLOYED).
+Frontier: **05-live-slash-proof** (ticket 04 done, 05 script-built — needs funds to run).
 
 - [x] `01-challenge-module` — bonded challenges + slash settlement + registry wiring (`7482912` impl, `09ac15b` tests)
 - [x] `02-mock-lending-pool` — demo loop: transparent score → gated loan → repay-as-attestation (`d2ede33` impl, `d269a64` tests)
-- [x] `03-testnet-deploy` — live on Monad testnet 10143, Sourcify-verified `perfect` ×5, pool funded + bonded (ticket-03 commit)
-- [ ] `04-abi-export` ← 03 (ABIs + addresses into shared/)
-- [ ] `05-live-slash-proof` ← 03 (scripted slash on testnet; parallel with 04)
+- [x] `03-testnet-deploy` — live on Monad testnet 10143, Sourcify-verified `perfect` ×5, pool funded + bonded (ticket-03 commits)
+- [x] `04-abi-export` — `bun run abis` regenerates `shared/src/abis/*.ts` (TS, not JSON — full viem inference); `frontend/lib/contracts.ts` consumes live addresses + ABIs; both packages typecheck (`02b113b`)
+- [ ] `05-live-slash-proof` ← 03 — script built (`34c1a3d`), execution needs 3 faucet-funded demo wallets (see ticket file runbook)
 
 ## Testnet deployment (2026-10-07, chain 10143)
 
@@ -132,9 +132,8 @@ own 5 MON bonds from individual faucet claims.
 
 ## In progress right now
 
-None — ticket 03 deployed + committed locally, unpushed.
-Next: ticket 04 (ABI export) + ticket 05 (live slash proof, needs a
-funded challenger wallet + a registered demo attester).
+None — tickets 04 + 05-script committed locally, unpushed.
+Next: run ProveSlash once 3 demo wallets are faucet-funded (5 / gas-only / 0.5+ MON).
 
 ## Blocked / waiting on
 
