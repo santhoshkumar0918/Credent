@@ -97,18 +97,18 @@ Monad testnet), per PRD §9 and AGENTS.md §4.
 
 ## Contract track (tickets live in `docs/contract-track/issues/` — gitignored)
 
-Frontier: **02-mock-lending-pool** (ticket 01 done this session).
+Frontier: **03-testnet-deploy** (ticket 02 done this session).
 
 - [x] `01-challenge-module` — bonded challenges + slash settlement + registry wiring (`7482912` impl, `09ac15b` tests)
-- [ ] `02-mock-lending-pool` ← 01 (demo loan loop)
+- [x] `02-mock-lending-pool` — demo loop: transparent score → gated loan → repay-as-attestation (`d2ede33` impl, `d269a64` tests)
 - [ ] `03-testnet-deploy` ← 02 (deploy + verify on 10143; needs funded key)
 - [ ] `04-abi-export` ← 03 (ABIs + addresses into shared/)
 - [ ] `05-live-slash-proof` ← 03 (scripted slash on testnet; parallel with 04)
 
 ## In progress right now
 
-None — ticket 01 committed locally (`7482912`, `09ac15b`), unpushed.
-Next: ticket 02 (MockLendingPool demo loop).
+None — ticket 02 committed locally (`d2ede33`, `d269a64`), unpushed.
+Next: ticket 03 (testnet deploy — needs funded deployer key).
 
 ## Blocked / waiting on
 
