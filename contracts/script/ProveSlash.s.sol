@@ -39,25 +39,41 @@ contract ProveSlash is Script {
 
     function run() external {
         require(block.chainid == 10143, "ProveSlash: Monad testnet only");
-        uint256 attesterKey = vm.envUint("ATTESTER_KEY");
-        uint256 subjectKey = vm.envUint("SUBJECT_KEY");
-        uint256 challengerKey = vm.envUint("CHALLENGER_KEY");
-        uint256 arbiterKey = vm.envUint("ARBITER_KEY");
-        address attester = vm.addr(attesterKey);
-        address subject = vm.addr(subjectKey);
-        address challenger = vm.addr(challengerKey);
+        address attester = vm.addr(vm.envUint("ATTESTER_KEY"));
+        address subject = vm.addr(vm.envUint("SUBJECT_KEY"));
+        address challenger = vm.addr(vm.envUint("CHALLENGER_KEY"));
         bytes32 pseudo = keccak256(abi.encode(subject, attester));
         console.log("pseudonym:", vm.toString(pseudo));
 
-        // 1. Attester registers (skipped if already active) and plants the
-        //    FALSE attestation: a GIG_PAYOUT that never happened.
-        uint256 bondBefore = ATTESTER_REGISTRY.getAttester(attester).bond;
+        uint256 bonded = _ensureBonded(attester);
+        uint256 attestationId = _plantFalse(attester, pseudo);
+        _grant(challenger, attester, pseudo);
+        uint256 challengeId = _challenge(attestationId);
+        _resolve(challengeId);
+        _claimAndAssert(challengeId, attestationId, attester, bonded);
+    }
+
+    /// @dev Registers (or tops up) the attester. Returns the bonded amount.
+    function _ensureBonded(address attester) internal returns (uint256 bonded) {
+        uint256 attesterKey = vm.envUint("ATTESTER_KEY");
+        uint256 MIN = ATTESTER_REGISTRY.MIN_BOND();
+        AttesterRegistry.Attester memory existing = ATTESTER_REGISTRY.getAttester(attester);
         vm.startBroadcast(attesterKey);
-        if (!ATTESTER_REGISTRY.isActiveAttester(attester)) {
-            ATTESTER_REGISTRY.register{value: 5e18}(AttesterRegistry.AttesterType.INDIVIDUAL);
-            console.log("attester registered with 5 MON bond");
+        if (existing.addr == address(0)) {
+            ATTESTER_REGISTRY.register{value: MIN}(AttesterRegistry.AttesterType.INDIVIDUAL);
+            console.log("attester registered with bond");
+        } else if (!existing.active) {
+            ATTESTER_REGISTRY.topUpBond{value: MIN - existing.bond}();
+            console.log("attester topped up to bond");
         }
-        uint256 attestationId = ATTESTATION_REGISTRY.nextAttestationId();
+        bonded = ATTESTER_REGISTRY.getAttester(attester).bond;
+        vm.stopBroadcast();
+    }
+
+    /// @dev Plants the FALSE GIG_PAYOUT attestation. Returns its id.
+    function _plantFalse(address attester, bytes32 pseudo) internal returns (uint256 attestationId) {
+        uint256 attesterKey = vm.envUint("ATTESTER_KEY");
+        attestationId = ATTESTATION_REGISTRY.nextAttestationId();
         bytes32 commitment = keccak256(
             abi.encode(
                 pseudo,
@@ -68,35 +84,53 @@ contract ProveSlash is Script {
                 keccak256(abi.encode(block.timestamp, attester))
             )
         );
+        vm.startBroadcast(attesterKey);
         ATTESTATION_REGISTRY.attest(pseudo, AttestationRegistry.EventType.GIG_PAYOUT, commitment, bytes32(0));
         vm.stopBroadcast();
         console.log("false attestation planted, id:", attestationId);
+    }
 
-        // 2. Subject grants the challenger a scoped disclosure.
+    /// @dev Subject grants the challenger a scoped GIG_PAYOUT disclosure.
+    function _grant(address challenger, address attester, bytes32 pseudo) internal {
+        uint256 subjectKey = vm.envUint("SUBJECT_KEY");
         bytes32[] memory scopes = new bytes32[](1);
         scopes[0] = keccak256("GIG_PAYOUT");
         uint256 expiry = block.timestamp + 30 days;
-        bytes memory grantSig =
-            _grantSig(subjectKey, pseudo, challenger, attester, scopes, expiry);
+        bytes memory grantSig = _grantSig(subjectKey, pseudo, challenger, attester, scopes, expiry);
         vm.startBroadcast(subjectKey);
         CONSENT_REGISTRY.grantAccess(pseudo, challenger, attester, scopes, expiry, grantSig);
         vm.stopBroadcast();
         console.log("subject granted GIG_PAYOUT disclosure to challenger");
+    }
 
-        // 3. Challenger opens the challenge with its bond.
-        uint256 challengeId = CHALLENGE_MODULE.nextChallengeId() + 1;
+    /// @dev Challenger opens the bonded challenge. Returns its id.
+    function _challenge(uint256 attestationId) internal returns (uint256 challengeId) {
+        uint256 challengerKey = vm.envUint("CHALLENGER_KEY");
+        uint256 CBOND = CHALLENGE_MODULE.CHALLENGER_BOND();
+        challengeId = CHALLENGE_MODULE.nextChallengeId() + 1;
         vm.startBroadcast(challengerKey);
-        CHALLENGE_MODULE.openChallenge{value: 0.5e18}(attestationId, keccak256("demo-disclosure"));
+        CHALLENGE_MODULE.openChallenge{value: CBOND}(attestationId, keccak256("demo-disclosure"));
         vm.stopBroadcast();
         console.log("challenge opened, id:", challengeId);
+    }
 
-        // 4. Arbiter resolves: challenger wins (the attestation is false).
+    /// @dev Arbiter resolves challenger-wins (the attestation is false).
+    function _resolve(uint256 challengeId) internal {
+        uint256 arbiterKey = vm.envUint("ARBITER_KEY");
         vm.startBroadcast(arbiterKey);
         CHALLENGE_MODULE.resolve(challengeId, true);
         vm.stopBroadcast();
         console.log("arbiter resolved: CHALLENGER_WON");
+    }
 
-        // 5. Challenger claims; assert the slash landed on-chain.
+    /// @dev Challenger claims; assert the slash landed on-chain.
+    function _claimAndAssert(
+        uint256 challengeId,
+        uint256 attestationId,
+        address attester,
+        uint256 bonded
+    ) internal {
+        uint256 challengerKey = vm.envUint("CHALLENGER_KEY");
         vm.startBroadcast(challengerKey);
         CHALLENGE_MODULE.claim(challengeId);
         vm.stopBroadcast();
@@ -106,8 +140,7 @@ contract ProveSlash is Script {
             "ProveSlash: attestation not SLASHED"
         );
         require(
-            ATTESTER_REGISTRY.getAttester(attester).bond < bondBefore,
-            "ProveSlash: bond not slashed"
+            ATTESTER_REGISTRY.getAttester(attester).bond < bonded, "ProveSlash: bond not slashed"
         );
         require(
             ATTESTER_REGISTRY.getAttester(attester).reputationScore < 0,
