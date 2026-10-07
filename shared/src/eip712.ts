@@ -30,6 +30,7 @@ export const consentGrantTypes = {
   ConsentGrant: [
     { name: "subjectPseudonym", type: "bytes32" },
     { name: "viewer", type: "address" },
+    { name: "attester", type: "address" },
     { name: "scopeTags", type: "bytes32[]" },
     { name: "expiry", type: "uint256" },
   ],

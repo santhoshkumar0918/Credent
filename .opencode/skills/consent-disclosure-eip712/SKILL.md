@@ -6,7 +6,7 @@ description: EIP-712 typed consent grants, keccak256(eventType) scope tags, revo
 ## Grant shape (on-chain, PRD section 9)
 
 ```
-Consent { bytes32[] scopeTags; uint256 expiry; bool revoked; }
+Consent { bytes32[] scopeTags; uint256 expiry; bool revoked; address grantSigner }
 mapping(subjectPseudonym => viewer => Consent)
 ```
 
@@ -17,10 +17,22 @@ mapping(subjectPseudonym => viewer => Consent)
   paymaster submits; the subject never pays gas). The contract
   verifies the signature before writing — an unsigned or
   mis-signed grant reverts.
-- Grants are bounded and future-dated; unbounded or already-expired
-  grants revert. `revokeAccess` takes effect on the next disclosure
-  check — revocation stops *new* disclosures immediately but does not
-  retroactively erase already-delivered ones.
+- Grants are bounded and future-dated; unbounded or
+  already-expired grants revert. `revokeAccess` takes effect on the
+  next disclosure check — revocation stops *new* disclosures immediately
+  but does not retroactively erase already-delivered ones.
+
+## Pseudonym binding (load-bearing — the consent review gate)
+
+`subjectPseudonym = keccak256(abi.encode(subjectAddress, attesterAddress))`.
+`grantAccess` recomputes this from the recovered signer + the declared
+`attester` (itself part of the signed struct) and reverts
+`NotPseudonymOwner` on mismatch; `markDisputedBySubject` enforces the
+same proof. Without this, anyone could self-sign a grant for anyone's
+pseudonym — a valid signature over altered fields simply recovers a
+different key — so the binding is what makes "the subject's signature"
+actually the subject's. Review gate: any grant/dispute path that accepts
+a signature WITHOUT the derivation check is rejected.
 
 ## Disclosure payload (off-chain, never stored on-chain, PRD section 10)
 
