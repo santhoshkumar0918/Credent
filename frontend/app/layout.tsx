@@ -3,7 +3,6 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { RoleProvider } from "@/lib/role-context";
-import { AppShell } from "@/components/AppShell";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -47,7 +46,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <Providers>
           <RoleProvider>
-            <AppShell>{children}</AppShell>
+            {children}
           </RoleProvider>
         </Providers>
       </body>
