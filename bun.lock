@@ -5,6 +5,22 @@
     "": {
       "name": "credent",
     },
+    "apps/agents": {
+      "name": "@vouchain/agents",
+      "version": "1.0.0",
+      "dependencies": {
+        "@fastify/cors": "^10.0.1",
+        "@fastify/helmet": "^13.0.0",
+        "fastify": "^5.2.1",
+        "shared": "workspace:*",
+        "viem": "^2.57.3",
+        "zod": "^3.24.1",
+      },
+      "devDependencies": {
+        "@types/node": "^22.10.7",
+        "typescript": "^5.7.3",
+      },
+    },
     "apps/api": {
       "name": "@vouchain/api",
       "version": "1.0.0",
@@ -923,6 +939,8 @@
     "@unrs/resolver-binding-win32-ia32-msvc": ["@unrs/resolver-binding-win32-ia32-msvc@1.12.2", "", { "os": "win32", "cpu": "ia32" }, "sha512-WD9sY00OfpHVGfsnHZoA8jVT+esS/Bg8z8jzxp5BnDCjjwsuKsPQrzswwpFy4J1AUJbXPRfkpcX0mXrzeXW79g=="],
 
     "@unrs/resolver-binding-win32-x64-msvc": ["@unrs/resolver-binding-win32-x64-msvc@1.12.2", "", { "os": "win32", "cpu": "x64" }, "sha512-nAB74NfSNKknqQ1RrYj6uz8FcXEomu/MATJZxh/x+BArzN2U3JbOYC0APYzUIGhVY3m5hRxA8VPNdPBoG8txlA=="],
+
+    "@vouchain/agents": ["@vouchain/agents@workspace:apps/agents"],
 
     "@vouchain/api": ["@vouchain/api@workspace:apps/api"],
 

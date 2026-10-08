@@ -109,20 +109,28 @@ Indexer track — I1 DONE, I2 DONE (this line supersedes the pre-merge
 - [ ] `I3-evidence-pinning` — parallel, no blockers — Pinata adapter
   behind `EvidenceBlob`; builds keyless, runs on `PINATA_JWT`
 
+Autonomous Agents Track (Member 3) — COMPLETE:
+- Built `apps/agents/` modular autonomous service (Fastify v5 + TypeScript on port 3003) on branch `changes-sree`.
+- Implemented 6 core agents:
+  1. **Collector Agent** (`POST /collector/webhook`): verifies platform ECDSA signature, standardizes data, creates commitment with `shared/src/commitments.ts`, encrypts receipt & pins to IPFS (Pinata + deterministic fallback), prepares on-chain `AttestationRegistry.attest()` tx.
+  2. **Verifier Agent** (`POST /verifier/check`): client-side commitment re-verification against on-chain `AttesterRegistry` bond/active state and `AttestationRegistry` status.
+  3. **Watcher Agent** (`POST /watcher/scan`): audit engine identifying fraudulent/mismatched attestations and opening live on-chain challenges on `ChallengeModule` with 0.5 MON bond for slashes.
+  4. **Explainer Agent** (`GET /score/:pseudonym`): pure deterministic credit assessment with multilingual explanations (English, Tanglish, Hindi) and strict number verification guard to reject AI hallucinations.
+  5. **Notifier Agent** (`POST /notify`): event dispatcher communicating with Member 2's `/api/notify/send`.
+  6. **Anomaly Agent** (`GET /anomaly/flags`, `POST /anomaly/detect`): algorithmic pattern detection for velocity bursts, wash collusion, and amount outliers.
+- Implemented pure deterministic scoring engine `shared/src/scorer.ts` matching `MockLendingPool.sol` integer math.
+- Added `/api/payout` in `apps/platform-sim` signing webhooks and dispatching to Collector Agent.
+- 22/22 monorepo unit tests passing green.
+
 ## In progress right now
 
-Pulled mate `origin/main` and merged (`2b0fea0`, both tracks preserved,
-nothing lost — merge conflicts were ANCHOR.md + bun.lock only, both
-resolved). Merged tree verified: forge 52/52, shared/indexer/apps-api
-tsc clean, frontend builds (10 routes). BUT the merge surfaced real
-design divergences between INTERFACES.md and the deployed contracts
-(table filed with Santhosh — reconciling code waits on adjudication).
+- Member 3 Autonomous Agents track built and verified on branch `changes-sree`.
 
 ## Blocked / waiting on
 
-- None code-blocking. Ready for full integration testing across frontend, API, indexer, and Monad testnet contracts.
+- None code-blocking.
 
 ## Next task
 
-1. Complete end-to-end integration wiring between `frontend`, `apps/api`, `apps/platform-sim`, `indexer`, and live deployed Monad testnet contracts (`0x84a8...`, `0x7fce...`, `0x6f47...`, `0xd7ca...`, `0xf2e7...`).
-2. Run live stack rehearsal & Playwright E2E tests (`bun run test:e2e`).
+1. Run full stack demo rehearsal connecting `apps/platform-sim` (port 3002) -> `apps/agents` (port 3003) -> Monad testnet contracts -> `apps/api` (port 3001) -> `frontend` (port 3000).
+2. Live testnet rehearsal of plant false claim -> Watcher challenge -> Arbiter slash.

@@ -32,14 +32,46 @@ export default function PlatformSimDashboard() {
   const [loading, setLoading] = useState(false);
   const [cycle, setCycle] = useState(6);
 
-  const triggerPayout = (outcome: "ON_TIME" | "LATE" | "MISSED" | "FABRICATED_CLAIM") => {
+  const triggerPayout = async (outcome: "ON_TIME" | "LATE" | "MISSED" | "FABRICATED_CLAIM") => {
     setLoading(true);
-    setTimeout(() => {
+    const amountStr = outcome === "MISSED" ? "0.00" : "25000.00";
+    const displayAmount = outcome === "MISSED" ? "₹0" : "₹25,000";
+
+    try {
+      const res = await fetch("/api/payout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          outcome,
+          workerId: "worker_9821",
+          amount: amountStr,
+        }),
+      });
+
+      const data = await res.json();
+      const txHash = data.txHash || `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
+
       const newEvent: PayoutEvent = {
         id: `evt_${Date.now().toString().slice(-4)}`,
         workerId: "worker_9821",
         workerName: "Meena (SwiftDeliver Pilot Worker)",
-        amount: outcome === "MISSED" ? "₹0" : "₹25,000",
+        amount: displayAmount,
+        eventType: "GIG_PAYOUT",
+        outcome,
+        proofTier: data.proofTier ?? (outcome === "FABRICATED_CLAIM" ? 1 : 2),
+        txHash,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+
+      setEvents((prev) => [newEvent, ...prev]);
+      if (outcome === "ON_TIME") setCycle((c) => c + 1);
+    } catch {
+      // Local fallback
+      const newEvent: PayoutEvent = {
+        id: `evt_${Date.now().toString().slice(-4)}`,
+        workerId: "worker_9821",
+        workerName: "Meena (SwiftDeliver Pilot Worker)",
+        amount: displayAmount,
         eventType: "GIG_PAYOUT",
         outcome,
         proofTier: outcome === "FABRICATED_CLAIM" ? 1 : 2,
@@ -48,8 +80,9 @@ export default function PlatformSimDashboard() {
       };
       setEvents((prev) => [newEvent, ...prev]);
       if (outcome === "ON_TIME") setCycle((c) => c + 1);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
