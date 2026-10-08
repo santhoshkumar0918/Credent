@@ -5,6 +5,8 @@
   "scripts": {
     "abis": "bash contracts/script/export-abis.sh",
     "contracts:build": "bun --cwd contracts forge build",
-    "contracts:test": "bun --cwd contracts forge test"
+    "contracts:test": "bun --cwd contracts forge test",
+    "test": "bun test shared/ apps/agents/",
+    "test:e2e": "bun --cwd frontend run test:e2e"
   }
 }
