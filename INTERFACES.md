@@ -21,26 +21,26 @@ $$\text{subjectPseudonym} = \text{keccak256}(\text{abi.encode}(\text{subjectWall
 ```ts
 export interface PlatformWebhookPayload {
   workerId: string;                     // e.g. "worker_9821"
-  platformAttester: `0x${string}`;       // Registered attester contract / wallet address
+  platformAttester: `0x${string}`;       // Registered attester contract / wallet address (5 MON bonded)
   eventType: "GIG_PAYOUT" | "RENT" | "BNPL_INSTALLMENT" | "UTILITY_BILL" | "P2P_LOAN_REPAYMENT";
-  amount: string;                        // Decimal string, e.g. "12500.00"
+  amount: string;                        // Decimal string, e.g. "25000.00"
   currency: "INR" | "USD" | "MON";
   outcome: "ON_TIME" | "LATE" | "MISSED";
   timestamp: number;                     // Unix timestamp in seconds
   evidenceHash: `0x${string}`;          // IPFS content CID hash
-   proofTier: 1 | 2 | 3;                  // T1=Bonded, T2=Source-Verified, T3=zkTLS
-   platformSignature: `0x${string}`;      // ECDSA signature over keccak256(payload)
- }
- ```
+  proofTier: 1 | 2 | 3;                  // T1=Bonded, T2=Source-Verified, T3=zkTLS
+  platformSignature: `0x${string}`;      // ECDSA signature over keccak256(payload)
+}
+```
 
- Outcome mapping (chain commits a boolean per PRD §10 — `shared/src/types.ts`
- `outcomeToOnTime`, the single mapping all UIs use): `ON_TIME` → `true`,
- `LATE` / `MISSED` / `DEFAULTED` → `false`. The rich label lives off-chain
- (attesterNote / disclosure); the commitment keeps the boolean.
+Outcome mapping (chain commits a boolean per PRD §10 — `shared/src/types.ts`
+`outcomeToOnTime`, the single mapping all UIs use): `ON_TIME` → `true`,
+`LATE` / `MISSED` / `DEFAULTED` → `false`. The rich label lives off-chain
+(attesterNote / disclosure); the commitment keeps the boolean.
 
 ---
 
-## 3. Consent EIP-712 Typed Data Specification
+## 3. Consent EIP-712 Typed Data & Envelope System
 
 Frozen definition matching `shared/src/eip712.ts` and `ConsentRegistry.sol`
 (`ConsentRegistry.GRANT_TYPEHASH` — the nonce closes the grant-replay hole:
@@ -65,6 +65,11 @@ export const EIP712_CONSENT_TYPES = {
   ],
 };
 ```
+
+### Consent Disclosure Envelopes:
+- **`POST /api/consent/envelopes`**: Subject posts the wrapped disclosure payload after confirming an on-chain grant.
+- **`GET /api/consent/envelopes`**: API server queries `ConsentRegistry.isAuthorized` on-chain **first**. Returns disclosure payload if `true`; returns `403 Forbidden` if revoked or missing.
+- **Key Wrapping Scheme**: ECIES over secp256k1 (or server-held disclosure fallback during MVP, honestly labeled).
 
 ---
 
@@ -93,17 +98,18 @@ Relayer verification rules:
 | `/api/auth/verify` | POST | Verify Privy JWT, return session token | Privy JWT |
 | `/api/users/me` | GET | Fetch profile, roles, linked pseudonyms | Session |
 | `/api/users/roles` | POST | Add/switch active role | Session |
-| `/api/lenders/register-key` | POST | Store lender's RSA/secp encryption public key | Session (Lender) |
-| `/api/consent/tokens` | POST | Issue encrypted consent access token | Session (Subject) |
-| `/api/consent/tokens/:id` | GET | Verify consent token & retrieve encrypted key | Session (Lender) |
+| `/api/lenders/register-key` | POST | Store lender's secp256k1 public key | Session (Lender) |
+| `/api/consent/envelopes` | POST | Store subject disclosure envelope | Session (Subject) |
+| `/api/consent/envelopes` | GET | Check `isAuthorized` on-chain & return disclosure envelope | On-Chain Gated |
 | `/api/relayer/submit` | POST | Submit EIP-712 meta-transaction to Monad | Public / Rate-limited |
-| `/api/subjects/:pseudonym/summary` | GET | Fetch score + verified disclosures | Consent token |
-| `/api/score/:pseudonym` | GET | Transparent demo heuristic ONLY (wraps the `MockLendingPool` formula, honestly labeled — never branded a credit score, per the product's core non-goal) | Consent token |
+| `/api/subjects/:pseudonym/summary` | GET | Fetch score + verified disclosures via Indexer | On-Chain Gated |
+| `/api/score/:pseudonym` | GET | Member 3 Explainer agent credit score & multilingual reasons | Public / Demo |
 | `/api/attesters/:address/reputation` | GET | Fetch attester reputation, bond & tier | Public |
-| `/api/pool/stats` | GET | Fetch lending pool tranche stats | Public |
+| `/api/pool/stats` | GET | Fetch lending pool contract stats | Public |
 | `/api/notify/send` | POST | Dispatch SMS / WhatsApp notification via Twilio | Internal / Agent |
-| `/api/demo/reset` | POST | Reset demo seed state | Demo Admin |
-| `/api/demo/fast-forward` | POST | Advance demo clock by N cycles | Demo Admin |
+| `/api/demo/health` | GET | Check health of all 5 microservices & block height | Public |
+| `/api/demo/wallets` | GET | View public addresses & MON balances of system roles | Public / Demo |
+| `/api/demo/resolve-challenge` | POST | Arbiter challenge resolution & slash execution | Admin Password |
 
 ---
 
@@ -112,8 +118,8 @@ Relayer verification rules:
 To maintain strict compliance with AGENTS.md and PRD §§9–10:
 
 1. **`demo funds`**: pool loans settle in native MON on testnet (PRD §9 `payable`; TESTNET-SCALED bonds). No ERC20 involved.
-2. **`pilot platform`**: `apps/platform-sim` simulated gig-platform operator.
-3. **`interim signed disclosure`**: MVP relies on EIP-712 scoped key release. ZK threshold-proof circuit (Noir/Circom) is the production roadmap item.
-4. **`arbiter address`**: Hackathon `ChallengeModule` relies on an owner-controlled resolver address. Decentralized oracle network is the production roadmap item.
-5. **`wallet abandonment`**: Wallet abandonment remains an unsolved limitation in v1 and is explicitly disclosed in pitch materials.
-6. **Data ownership**: ONE Postgres, two namespaces — the attestation graph mirror has exactly one writer (indexer subscriber); app/operational tables belong to `apps/api`. Consent/product reads defer to on-chain truth; the indexer API serves chain-data reads, Fastify serves product flows.
+2. **`pilot platform`**: `apps/platform-sim` simulated gig-platform operator with platform payout ledger (`GET /api/ledger`).
+3. **`interim signed disclosure`**: MVP relies on server-held disclosures gated by `ConsentRegistry.isAuthorized` on-chain. ZK threshold-proof circuit (Noir/Circom) is the production roadmap item.
+4. **`arbiter address`**: Hackathon `ChallengeModule` relies on an owner-controlled resolver address signed with `ARBITER_PRIVATE_KEY`. Decentralized oracle network is the production roadmap item.
+5. **`red-team attester rotation`**: Plant false claim testing writes red-team attestations directly on-chain with rotated red-team keys, bypassing the honest platform attester (`NEW_PLATFORM_ATTESTER_PRIVATE_KEY`).
+6. **`wallet abandonment`**: Wallet abandonment remains an unsolved limitation in v1 and is explicitly disclosed in pitch materials.
