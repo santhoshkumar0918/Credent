@@ -1,8 +1,14 @@
 {
   "name": "credent",
   "private": true,
-  "workspaces": ["frontend", "indexer", "shared", "apps/*"],
+  "workspaces": [
+    "frontend",
+    "indexer",
+    "shared",
+    "apps/*"
+  ],
   "scripts": {
+    "dev:all": "npx concurrently -n \"frontend,api,sim,agents,indexer\" -c \"cyan,magenta,green,yellow,blue\" \"bun --cwd frontend dev\" \"bun --cwd apps/api dev\" \"bun --cwd apps/platform-sim dev\" \"bun --cwd apps/agents dev\" \"bun --cwd indexer start\"",
     "abis": "bash contracts/script/export-abis.sh",
     "contracts:build": "bun --cwd contracts forge build",
     "contracts:test": "bun --cwd contracts forge test",

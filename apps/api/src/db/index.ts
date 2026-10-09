@@ -11,6 +11,7 @@ export class MemoryDbStore {
   pseudonyms = new Map<string, any[]>();
   lenderKeys = new Map<string, string>();
   consentTokens = new Map<string, any>();
+  consentEnvelopes = new Map<string, any>();
   notifications = new Map<string, any[]>();
   demoState = new Map<string, any>();
 }
