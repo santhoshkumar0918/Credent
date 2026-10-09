@@ -42,23 +42,6 @@ export async function registerLenderKey(publicKeyHex: string) {
   });
 }
 
-export async function issueConsentToken(params: {
-  pseudonymHex: string;
-  viewerAddress: string;
-  scopeTags: string[];
-  expiry: number;
-  encryptedKeyHex?: string;
-}) {
-  return apiFetch<{ status: string; tokenId: string; consentToken: any }>("/api/consent/tokens", {
-    method: "POST",
-    body: JSON.stringify(params),
-  });
-}
-
-export async function verifyConsentToken(tokenId: string) {
-  return apiFetch<{ valid: boolean; token: any }>(`/api/consent/tokens/${tokenId}`);
-}
-
 export async function submitRelayedTx(params: {
   targetContract: string;
   functionName: "grantAccess" | "revokeAccess" | "openChallenge";
@@ -71,14 +54,22 @@ export async function submitRelayedTx(params: {
   });
 }
 
-export async function fetchSubjectSummary(pseudonym: string, consentToken?: string) {
-  const headers: Record<string, string> = {};
-  if (consentToken) headers["x-consent-token"] = consentToken;
-  return apiFetch<{ pseudonym: string; summary: any }>(`/api/subjects/${pseudonym}/summary`, { headers });
+export async function fetchSubjectSummary(pseudonym: string, viewerAddress?: string) {
+  const query = viewerAddress ? `?viewer=${encodeURIComponent(viewerAddress)}` : "";
+  return apiFetch<{ pseudonym: string; verified: boolean; summary: any }>(`/api/subjects/${pseudonym}/summary${query}`);
 }
 
-export async function fetchSubjectScore(pseudonym: string) {
-  return apiFetch<{ pseudonym: string; score: number; maxScore: number; reasons: string[] }>(`/api/score/${pseudonym}`);
+export async function fetchSubjectScore(pseudonym: string, lang: "en" | "ta" | "hi" = "en") {
+  return apiFetch<{
+    pseudonym: string;
+    score: number;
+    maxScore: number;
+    decision: string;
+    tier: string;
+    recommendedLimitINR: number;
+    reasons: string[];
+    explanations?: { en: string[]; ta: string[]; hi: string[] };
+  }>(`/api/score/${pseudonym}?lang=${lang}`);
 }
 
 export async function fetchAttesterReputation(address: string) {
@@ -91,6 +82,39 @@ export async function fetchPoolStats() {
 
 export async function sendNotification(params: { phone?: string; channel: "SMS" | "WHATSAPP" | "IN_APP"; message: string }) {
   return apiFetch<{ status: string; channel: string }>("/api/notify/send", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function fetchSystemHealth() {
+  return apiFetch<{
+    status: string;
+    chain: string;
+    latestBlock: string;
+    indexerLagBlocks: number;
+    services: Record<string, { status: "online" | "offline"; latencyMs: number }>;
+  }>("/api/demo/health");
+}
+
+export async function fetchAdminWallets() {
+  return apiFetch<{
+    wallets: Array<{ roleName: string; address: string; balanceMON: string }>;
+  }>("/api/demo/wallets");
+}
+
+export async function resolveChallengeAdmin(params: {
+  adminPassword: string;
+  challengeId: string;
+  slashAttester: boolean;
+}) {
+  return apiFetch<{
+    status: string;
+    challengeId: string;
+    slashed: boolean;
+    txHash: string;
+    message: string;
+  }>("/api/demo/resolve-challenge", {
     method: "POST",
     body: JSON.stringify(params),
   });
