@@ -139,8 +139,22 @@ challenge list from ChallengeModule + real 0.5 MON openChallenge (grant/
 window/bond errors translated) + winner claims + red-team honesty card, no
 fake admin-resolve modal (`a9c02ba`, `frontend/lib/dispute.ts`); pool
 stripped to fund/underwrite/originate/repay with live balance + real fund()
-(`a9c02ba`). Next: Phase 6 polish (empty/error states, mobile pass, e2e
-repair, kill mock-data.ts).
+(`a9c02ba`). Phase 6 POLISH DONE: light-theme public site + honest copy (no
+waterfall/ERC20/decryption-key claims), activity-from-grants feed,
+settings/health unknown-states, responsive grids, e2e rewritten 7/7 green,
+mock-data.ts DELETED (`eaffdeb`, `c8c7d37`, `1082843`, `5ea9496`).
+REWIRE COMPLETE — every screen live or honestly empty; zero mock
+fallbacks in the app.
+
+MATE-BACKEND DEFECTS (pre-existing, verified with each workspace's pinned
+tsc — NOT touched, owned by their tracks):
+- D2 exact: `apps/api/src/routes/demo.ts:182,198,204,209,210,213,221,222`
+  `Cannot find name 'body'` — resolve-challenge crashes at runtime AND
+  typecheck. Fix: parse ResolveChallengeSchema + extract body.
+- `apps/api/src/routes/subjects.ts:50` `verifyData` is unknown (needs cast).
+- `indexer/src/index.ts:104` possibly-undefined invoke (needs guard).
+- `apps/platform-sim/app/api/payout/route.ts:4` cannot resolve `shared`
+  (breaks `next build` there) — same alias treatment frontend got.
 
 CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale):
 - ConsentRegistry 0x6f47… runs PRE-nonce code. Relayer old ABI MATCHES it:
