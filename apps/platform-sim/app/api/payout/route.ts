@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { privateKeyToAccount } from "viem/accounts";
-import { keccak256, stringToBytes, createWalletClient, http } from "viem";
+import { keccak256, stringToBytes, createWalletClient, http, type Hex } from "viem";
+import { pseudonymFor } from "shared";
 import { payoutLedger } from "../ledger/route";
 
 // Honest Platform Attester Key (Fresh wallet, 5 MON bonded, never slashed)
@@ -44,7 +45,16 @@ const ATTEST_ABI = [
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { outcome, workerId = "worker_9821", amount = "25000.00" } = body;
+    const {
+      outcome,
+      workerId = "worker_9821",
+      amount = "25000.00",
+      workerAddress = "0x944115Eb0Ad1A2c86b0FBDB4918930C220ffde28",
+    } = body;
+
+    const honestAccount = privateKeyToAccount(HONEST_PLATFORM_KEY);
+    const platformAttester = honestAccount.address;
+    const pseudonymHex = pseudonymFor(workerAddress as Hex, platformAttester as Hex);
 
     const timestamp = Math.floor(Date.now() / 1000);
     const eventType = "GIG_PAYOUT";
@@ -53,12 +63,11 @@ export async function POST(req: Request) {
     const eventOutcome = outcome === "FABRICATED_CLAIM" ? "ON_TIME" : outcome;
 
     if (outcome === "FABRICATED_CLAIM") {
-      // 🚨 FALSE CLAIM: Rotate red-team key, write DIRECTLY on-chain, SKIP ledger!
+      // 🚨 FALSE CLAIM: Rotate red-team key, write DIRECTLY on-chain using honest pseudonym, SKIP ledger!
       const signingKey = REDTEAM_KEYS[redTeamIndex % REDTEAM_KEYS.length];
       redTeamIndex++;
 
       const account = privateKeyToAccount(signingKey);
-      const pseudonymHex = "0x5f2e0000000000000000000000000000000000000000000000000000000000b1" as `0x${string}`;
       const fakeCommitmentHash = keccak256(stringToBytes(`FAKE_PAYOUT:${timestamp}:${Math.random()}`));
       const fakeEvidenceHash = keccak256(stringToBytes(`FAKE_EVIDENCE:${timestamp}`));
 
@@ -84,28 +93,28 @@ export async function POST(req: Request) {
       return NextResponse.json({
         status: "fabricated_onchain",
         txHash,
+        pseudonym: pseudonymHex,
         commitmentHash: fakeCommitmentHash,
         evidenceHash: fakeEvidenceHash,
         attesterAddress: account.address,
         isRedTeam: true,
         ledgerRecorded: false,
-        note: "False claim written directly on-chain using red-team key; skipped platform payout ledger for Watcher detection",
+        note: "False claim written directly on-chain using red-team key with honest subject pseudonym; skipped platform payout ledger for Watcher detection",
       });
     }
 
     // 🟢 LEGITIMATE PAYOUT: Honest attester key, dispatch to Collector, record in ledger!
-    const account = privateKeyToAccount(HONEST_PLATFORM_KEY);
-    const platformAttester = account.address;
-
     const canonicalString = `${workerId}:${platformAttester.toLowerCase()}:${eventType}:${amount}:${currency}:${eventOutcome}:${timestamp}:${proofTier}`;
     const payloadHash = keccak256(stringToBytes(canonicalString));
-    const platformSignature = await account.sign({ hash: payloadHash });
+    const platformSignature = await honestAccount.sign({ hash: payloadHash });
 
     const agentsUrl = process.env.AGENTS_SERVICE_URL || "http://localhost:3003";
 
     const payload = {
       workerId,
       platformAttester,
+      subjectAddress: workerAddress,
+      subjectPseudonym: pseudonymHex,
       eventType,
       amount,
       currency,

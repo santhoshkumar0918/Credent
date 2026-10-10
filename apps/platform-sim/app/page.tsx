@@ -31,6 +31,7 @@ export default function PlatformSimDashboard() {
 
   const [loading, setLoading] = useState(false);
   const [cycle, setCycle] = useState(6);
+  const [workerAddress, setWorkerAddress] = useState("0x944115Eb0Ad1A2c86b0FBDB4918930C220ffde28");
 
   const triggerPayout = async (outcome: "ON_TIME" | "LATE" | "MISSED" | "FABRICATED_CLAIM") => {
     setLoading(true);
@@ -44,6 +45,7 @@ export default function PlatformSimDashboard() {
         body: JSON.stringify({
           outcome,
           workerId: "worker_9821",
+          workerAddress,
           amount: amountStr,
         }),
       });
@@ -119,9 +121,18 @@ export default function PlatformSimDashboard() {
               <span className="text-slate-400">Worker ID</span>
               <span className="font-mono text-purple-300">worker_9821 (Meena)</span>
             </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-slate-400">Vouchain Pseudonym</span>
-              <span className="font-mono text-xs text-slate-300">0x5f2e...b1</span>
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-xs text-slate-400">
+                <span>Worker Embedded Wallet (Privy / Metamask)</span>
+                <span className="text-purple-400 font-mono">Monad 10143</span>
+              </div>
+              <input
+                type="text"
+                value={workerAddress}
+                onChange={(e) => setWorkerAddress(e.target.value)}
+                placeholder="0x..."
+                className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:outline-none focus:border-purple-500"
+              />
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-slate-400">Verification Status</span>
