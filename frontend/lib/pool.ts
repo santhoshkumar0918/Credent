@@ -77,7 +77,7 @@ export async function readUnderwriting(pseudonym: Hex): Promise<Underwriting | n
     functionName: "underwritings",
     args: [pseudonym],
   })) as [bigint, bigint];
-  if (timestamp === 0n) return null;
+  if (timestamp === BigInt(0)) return null;
   return { score, timestamp };
 }
 
@@ -90,15 +90,16 @@ export async function readMyLoans(borrower: Address): Promise<Loan[]> {
     functionName: "nextLoanId",
   })) as bigint;
   const out: Loan[] = [];
-  for (let i = 0n; i < next; i++) {
+  const total = Number(next);
+  for (let n = 0; n < total; n++) {
     const [pseudonym, who, amount, dueAt, repaid] = (await client.readContract({
       address: POOL_ADDRESS,
       abi: poolReadsAbi,
       functionName: "loans",
-      args: [i],
+      args: [BigInt(n)],
     })) as [Hex, Address, bigint, bigint, boolean];
     if (who.toLowerCase() === borrower.toLowerCase()) {
-      out.push({ id: Number(i), borrowerPseudonym: pseudonym, borrower: who, amount, dueAt, repaid });
+      out.push({ id: n, borrowerPseudonym: pseudonym, borrower: who, amount, dueAt, repaid });
     }
   }
   return out.reverse(); // newest first

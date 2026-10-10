@@ -17,6 +17,7 @@
 import type { Address, Hex } from "viem";
 import { ADDRESSES, MONAD_TESTNET_CHAIN_ID, MONAD_TESTNET_EXPLORER } from "@shared/constants";
 import { scopeTag } from "@shared/eip712";
+import type { EventType } from "@shared/types";
 import { getPublicClient } from "./contracts";
 import { monadTestnet } from "./wagmi";
 import { submitRelayedTx } from "./api-client";
@@ -115,7 +116,7 @@ export function grantMessage(g: GrantInput) {
     subjectPseudonym: g.subjectPseudonym,
     viewer: g.viewer,
     attester: g.attester,
-    scopeTags: g.eventTypes.map((t) => scopeTag(t)),
+    scopeTags: g.eventTypes.map((t) => scopeTag(t as EventType)),
     expiry: g.expiry.toString(),
   };
 }
@@ -140,7 +141,7 @@ export async function isScopeAuthorized(pseudonym: Hex, viewer: Address, eventTy
     address: DEPLOYED_CONSENT_ADDRESS,
     abi: deployedConsentAbi,
     functionName: "isAuthorized",
-    args: [pseudonym, viewer, scopeTag(eventType)],
+    args: [pseudonym, viewer, scopeTag(eventType as EventType)],
   })) as boolean;
 }
 
@@ -154,7 +155,7 @@ export async function submitGrant(
   signature: Hex,
   walletClient?: WalletClient,
 ): Promise<SubmitOutcome> {
-  const scopeTags = g.eventTypes.map((t) => scopeTag(t));
+  const scopeTags = g.eventTypes.map((t) => scopeTag(t as EventType));
   const args = [g.subjectPseudonym, g.viewer, g.attester, scopeTags, Number(g.expiry), signature];
   try {
     const res = await submitRelayedTx({
