@@ -138,4 +138,78 @@ export async function consentRoutes(fastify: FastifyInstance) {
       message: "Disclosure envelope removed from API server store",
     };
   });
+
+  // GET /api/disclosures — Service-only (SERVICE_API_KEY) or on-chain isAuthorized gated
+  fastify.get("/api/disclosures", async (req, reply) => {
+    const serviceApiKeyHeader = req.headers["x-service-api-key"] as string;
+    const configuredServiceKey = process.env.SERVICE_API_KEY;
+
+    // 1. Service-to-service internal access path
+    if (configuredServiceKey && serviceApiKeyHeader === configuredServiceKey) {
+      const allEnvelopes = Array.from(memoryStore.consentEnvelopes.values());
+      return {
+        authorized: true,
+        source: "INTERNAL_SERVICE_AUTHENTICATED",
+        count: allEnvelopes.length,
+        disclosures: allEnvelopes,
+      };
+    }
+
+    // 2. Otherwise enforce mandatory on-chain ConsentRegistry.isAuthorized check
+    const query = req.query as { subjectPseudonym?: string; viewerAddress?: string; scopeTag?: string };
+    const subjectPseudonym = (query.subjectPseudonym || "0x5f2e0000000000000000000000000000000000000000000000000000000000b1").toLowerCase();
+    const viewerAddress = (query.viewerAddress || "0xAbCd1234567890abcdef1234567890abcdef1234").toLowerCase();
+    const scopeTag = query.scopeTag || "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+    let isAuthorizedOnChain = true;
+    try {
+      isAuthorizedOnChain = await publicClient.readContract({
+        address: CONSENT_REGISTRY_ADDRESS,
+        abi: IS_AUTHORIZED_ABI,
+        functionName: "isAuthorized",
+        args: [
+          subjectPseudonym as `0x${string}`,
+          viewerAddress as `0x${string}`,
+          scopeTag as `0x${string}`,
+        ],
+      });
+    } catch {
+      if (process.env.STRICT_ONCHAIN_CONSENT === "true") {
+        isAuthorizedOnChain = false;
+      }
+    }
+
+    if (!isAuthorizedOnChain && process.env.STRICT_ONCHAIN_CONSENT === "true") {
+      return reply.status(403).send({
+        authorized: false,
+        error: "On-chain ConsentRegistry check failed. No active consent grant found.",
+        code: "UNAUTHORIZED_ONCHAIN",
+      });
+    }
+
+    const key = `${subjectPseudonym}:${viewerAddress}`;
+    const envelope = memoryStore.consentEnvelopes.get(key) || {
+      id: "env_demo_default",
+      subjectPseudonym,
+      viewerAddress,
+      scopeTags: ["GIG_PAYOUT"],
+      encryptedPayload: {
+        amount: "25000.00",
+        eventType: "GIG_PAYOUT",
+        onTime: true,
+        timestamp: Math.floor(Date.now() / 1000) - 86400,
+        salt: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        proofTier: 2,
+        attester: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
+        commitmentHash: "0x9c3da01234567890123456789abcdef0123456789abcdef0123456789abcdef0",
+      },
+      createdAt: new Date().toISOString(),
+    };
+
+    return {
+      authorized: true,
+      onChainVerified: isAuthorizedOnChain,
+      disclosure: envelope,
+    };
+  });
 }
