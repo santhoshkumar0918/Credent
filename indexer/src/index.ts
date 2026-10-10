@@ -43,10 +43,55 @@ const shutdown = () => process.exit(0);
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
+const inMemoryCache = new Map<string, { val: string; exp: number }>();
+
+let redisClient: InstanceType<typeof Redis> | null = null;
+try {
+  redisClient = new Redis(redisUrl, {
+    maxRetriesPerRequest: 1,
+    retryStrategy: () => null,
+  });
+  redisClient.on("error", () => {
+    // Suppress unhandled error event when local Redis is not running
+  });
+} catch {
+  // Fall back to inMemoryCache
+}
+
+const cache = {
+  async get(key: string) {
+    if (redisClient && redisClient.status === "ready") {
+      try {
+        return await redisClient.get(key);
+      } catch {}
+    }
+    const item = inMemoryCache.get(key);
+    if (!item) return null;
+    if (Date.now() > item.exp) {
+      inMemoryCache.delete(key);
+      return null;
+    }
+    return item.val;
+  },
+  async setex(key: string, seconds: number, val: string) {
+    if (redisClient && redisClient.status === "ready") {
+      try {
+        return await redisClient.setex(key, seconds, val);
+      } catch {}
+    }
+    inMemoryCache.set(key, { val, exp: Date.now() + seconds * 1000 });
+  },
+  disconnect() {
+    try {
+      redisClient?.disconnect();
+    } catch {}
+  },
+};
+
 const ctx: ApiContext = {
   pool,
   client: createPublicClient({ transport: http(rpcUrl) }),
-  redis: new Redis(redisUrl, { maxRetriesPerRequest: 1 }),
+  redis: cache,
 };
 
 const server = Bun.serve({ port, fetch: router(ctx) });

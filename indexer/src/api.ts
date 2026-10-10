@@ -18,10 +18,16 @@ import type { PublicClient } from "viem";
 import type Redis from "ioredis";
 import { grantExpiry, hasLiveGrant, hasLiveScope } from "./consent.js";
 
+export interface CacheClient {
+  get(key: string): Promise<string | null>;
+  setex(key: string, seconds: number, val: string): Promise<unknown>;
+  disconnect?(): void;
+}
+
 export interface ApiContext {
   pool: Pool;
   client: PublicClient;
-  redis: Redis;
+  redis: CacheClient;
 }
 
 const TOKEN_TTL_SECONDS = 900;
