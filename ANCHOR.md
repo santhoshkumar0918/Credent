@@ -123,7 +123,10 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-None. (Member 2 & 3 operational bridge completed; live testnet transactions proven).
+Frontend rewire Phase 0+1 IN PROGRESS (local commits, NOT pushed):
+`83ab67a` sunlit tokens + Newsreader → `4693ae9` nav seam + mobile nav →
+`3b4f09b` real /explorer + shim deletion → `e18ac87` signing seam + onboarding →
+`cbeb49d` Turbopack ABI fix. Next: Phase 2 borrower loop (needs D1 relayer nonce).
 
 ## Last completed
 - **Environment & Secret Hygiene**:
