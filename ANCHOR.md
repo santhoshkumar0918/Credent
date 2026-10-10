@@ -143,6 +143,12 @@ stripped to fund/underwrite/originate/repay with live balance + real fund()
 waterfall/ERC20/decryption-key claims), activity-from-grants feed,
 settings/health unknown-states, responsive grids, e2e rewritten 7/7 green,
 mock-data.ts DELETED (`eaffdeb`, `c8c7d37`, `1082843`, `5ea9496`).
+Layout-bug fix (`3883cb2`): /explorer lived OUTSIDE the (public) group so
+the navbar/footer never rendered — moved into the group; added the missing
+logo (killed a 404) + a live latest-on-chain list so the page is never
+blank; lender verify tab gained a sticky explainer rail for wide screens.
+Screenshot-verified crisp (earlier paleness was mid-animation capture).
+Sidebar "clipping" in the report is an external overlay widget, not the app.
 REWIRE COMPLETE — every screen live or honestly empty; zero mock
 fallbacks in the app.
 
