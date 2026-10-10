@@ -1,157 +1,167 @@
 "use client";
 
-import { MOCK_POOL } from "@/lib/mock-data";
-import { useState } from "react";
+// Demo pool — exactly what MockLendingPool is, nothing it isn't: a pot of
+// testnet MON that funds underwritten loans. No tranches, no reserve fund,
+// no waterfall — those don't exist on-chain and aren't shown. Anyone can
+// fund; the operator originates; borrowers repay (which mints attestations).
+
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
+import { useEmbeddedWallet, getEmbeddedWalletClient } from "@/lib/wallet";
+import { fundPool, poolTxUrl } from "@/lib/pool";
+import { readPoolBook, fmtMON } from "@/lib/lender";
+
+function short(hex: string) {
+  return hex.length > 16 ? `${hex.slice(0, 10)}…${hex.slice(-6)}` : hex;
+}
 
 export default function PoolPage() {
-  const [depositing, setDepositing] = useState(false);
-  const [amount, setAmount] = useState("");
-  const p = MOCK_POOL;
+  const { wallet } = useEmbeddedWallet();
+  const [book, setBook] = useState<{ loans: { id: number; borrower: string; amount: bigint; dueAt: bigint; repaid: boolean }[]; balance: bigint } | null | undefined>(undefined);
+  const [amount, setAmount] = useState("1");
+  const [funding, setFunding] = useState(false);
+  const [fundTx, setFundTx] = useState<string | null>(null);
 
-  const loaned_pct = (p.totalLoaned / p.totalDeposited) * 100;
-  const repaid_pct = (p.totalRepaid / p.totalLoaned) * 100;
-  const utilisation = loaned_pct;
+  const refresh = useCallback(async () => {
+    setBook(await readPoolBook());
+  }, []);
 
-  async function handleDeposit() {
-    if (!amount || isNaN(parseFloat(amount))) {
-      toast.error("Enter a valid amount");
+  useEffect(() => { refresh(); }, [refresh]);
+
+  async function handleFund() {
+    const v = parseFloat(amount);
+    if (!amount || isNaN(v) || v <= 0) {
+      toast.error("Enter a MON amount above zero.");
       return;
     }
-    setDepositing(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setDepositing(false);
-    toast.success(`₹${parseFloat(amount).toLocaleString()} deposited into MockLendingPool`);
-    setAmount("");
+    if (!wallet) {
+      toast.error("Wallet not ready.");
+      return;
+    }
+    setFunding(true);
+    setFundTx(null);
+    try {
+      const wc = await getEmbeddedWalletClient(wallet);
+      const tx = await fundPool(wc, amount);
+      setFundTx(tx);
+      toast.success(`Funded ${v} MON to the demo pool.`);
+      setAmount("1");
+      await refresh();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Funding failed.";
+      toast.error(/rejected|denied/i.test(msg) ? "Rejected in wallet." : msg.slice(0, 160));
+    } finally {
+      setFunding(false);
+    }
   }
+
+  const outstanding = book && book !== null
+    ? book.loans.filter((l) => !l.repaid).reduce((s, l) => s + l.amount, BigInt(0))
+    : null;
+  const repaid = book && book !== null ? book.loans.filter((l) => l.repaid).length : null;
 
   return (
     <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div className="page-header">
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginBottom: "0.5rem" }}>
-          <h1 style={{ fontSize: "1.6rem" }}>Lending Pool Dashboard</h1>
-          <span className="badge badge-demo">testnet pool</span>
+        <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", marginBottom: "0.4rem" }}>
+          <p className="eyebrow">Lender · Pool</p>
+          <span className="badge badge-demo">demo pool · testnet MON</span>
         </div>
+        <h1 style={{ fontSize: "1.8rem", marginBottom: "0.35rem" }}>Lending pool</h1>
         <p style={{ color: "var(--vc-text-secondary)", fontSize: "0.9rem" }}>
-          Capital pool backing proof-gated underwritten loans on Monad testnet.
+          Capital backing proof-gated loans. What you see is everything the contract does.
         </p>
       </div>
 
-      {/* Honesty & Roadmap Transparency Banner */}
-      <div
-        className="card"
-        style={{
-          padding: "1rem 1.25rem",
-          background: "rgba(245, 158, 11, 0.08)",
-          borderColor: "rgba(245, 158, 11, 0.3)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-        }}
-      >
-        <span style={{ fontSize: "1.2rem" }}>ℹ️</span>
-        <div style={{ fontSize: "0.82rem", color: "var(--vc-text-secondary)", lineHeight: 1.5 }}>
-          <strong style={{ color: "#F59E0B" }}>Transparency Note:</strong> This demo operates against the live{" "}
-          <code style={{ color: "#38BDF8" }}>MockLendingPool.sol</code> contract. Senior/First-loss tranches, reserve funds,
-          and default waterfalls are <span style={{ textDecoration: "underline" }}>roadmap features</span> (PRD §17).
-        </div>
-      </div>
-
       <div className="page-body" style={{ display: "grid", gap: "1.5rem" }}>
-        {/* Real Pool Overview */}
         <div className="card">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.75rem" }}>
-            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1rem" }}>Pool Capital Overview</h2>
-            <span className="badge badge-active">MockLendingPool.sol</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
+            <h2 style={{ fontSize: "1.05rem" }}>Pool capital</h2>
+            <button className="btn btn-ghost btn-sm" onClick={refresh}>Refresh</button>
           </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
-            {[
-              { label: "Total Deposited", value: `₹${p.totalDeposited.toLocaleString()}` },
-              { label: "Total Loaned", value: `₹${p.totalLoaned.toLocaleString()}` },
-              { label: "Total Repaid", value: `₹${p.totalRepaid.toLocaleString()}` },
-              { label: "Active Default Rate", value: `${p.defaultRate}%` },
-            ].map((s) => (
-              <div key={s.label} className="stat-card">
-                <div className="stat-value" style={{ fontSize: "1.3rem" }}>{s.value}</div>
-                <div className="stat-label">{s.label}</div>
+          {book === undefined ? (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
+              <div className="skeleton" style={{ height: 56 }} />
+              <div className="skeleton" style={{ height: 56 }} />
+              <div className="skeleton" style={{ height: 56 }} />
+            </div>
+          ) : book === null ? (
+            <p style={{ fontSize: "0.88rem", color: "var(--vc-warning)" }}>Pool unreadable — RPC may be down. Retry.</p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
+              <div className="stat-card">
+                <div className="stat-value" style={{ fontSize: "1.4rem" }}>{fmtMON(book.balance)} MON</div>
+                <div className="stat-label">Pool balance</div>
               </div>
-            ))}
-          </div>
+              <div className="stat-card">
+                <div className="stat-value" style={{ fontSize: "1.4rem" }}>{outstanding !== null ? fmtMON(outstanding) : "—"} MON</div>
+                <div className="stat-label">Outstanding</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value" style={{ fontSize: "1.4rem" }}>{book.loans.length}</div>
+                <div className="stat-label">Loans originated</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-value" style={{ fontSize: "1.4rem" }}>{repaid ?? "—"}</div>
+                <div className="stat-label">Repaid</div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Pool Utilisation Grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
-          <div className="card">
-            <h3 style={{ fontFamily: "var(--font-heading)", fontSize: "0.95rem", marginBottom: "1.25rem" }}>
-              Pool Capital Utilisation
-            </h3>
-            <div style={{
-              width: 100, height: 100,
-              borderRadius: "50%",
-              margin: "0 auto 1rem",
-              background: `conic-gradient(var(--vc-violet) ${utilisation}%, var(--vc-surface-3) 0)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}>
-              <div style={{
-                width: 70, height: 70, borderRadius: "50%",
-                background: "var(--vc-surface-1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "var(--font-heading)",
-                fontWeight: 700,
-                fontSize: "1.1rem",
-              }}>
-                {utilisation.toFixed(0)}%
-              </div>
-            </div>
-            <div style={{ fontSize: "0.8rem", color: "var(--vc-text-muted)", textAlign: "center" }}>
-              {utilisation.toFixed(1)}% of pool capital is currently lent out
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginTop: "1rem" }}>
-              <span style={{ color: "var(--vc-text-muted)" }}>Repaid Capital Ratio</span>
-              <strong style={{ color: "var(--vc-success)" }}>{repaid_pct.toFixed(0)}%</strong>
-            </div>
-          </div>
-
-          {/* Deposit Liquidity Form */}
-          <div className="card">
-            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1rem", marginBottom: "1rem" }}>
-              Deposit Liquidity
-            </h2>
-            <div style={{ marginBottom: "1rem" }}>
-              <label className="input-label">Deposit Amount (₹)</label>
-              <input
-                type="number"
-                className="input-field"
-                placeholder="e.g. 10000"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                id="pool-deposit-input"
-              />
-            </div>
-            <div style={{
-              fontSize: "0.78rem",
-              color: "var(--vc-text-secondary)",
-              marginBottom: "1rem",
-              padding: "0.6rem",
-              background: "var(--vc-surface-2)",
-              borderRadius: "var(--radius-sm)",
-            }}>
-              Deposits fund verified micro-loans for gig workers with on-chain source attestations.
-            </div>
-            <button
-              className="btn btn-primary"
-              onClick={handleDeposit}
-              disabled={depositing}
-              id="pool-deposit-btn"
-            >
-              {depositing ? "Depositing…" : "Deposit to Pool"}
+        <div className="card" style={{ maxWidth: 560 }}>
+          <h2 style={{ fontSize: "1.05rem", marginBottom: "0.5rem" }}>Fund the pool</h2>
+          <p style={{ fontSize: "0.82rem", color: "var(--vc-text-muted)", marginBottom: "1rem" }}>
+            Anyone can add liquidity — it funds originated loans and absorbs no risk beyond the demo.
+          </p>
+          <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", alignItems: "center" }}>
+            <input className="input-field mono" value={amount} onChange={(e) => setAmount(e.target.value)}
+              inputMode="decimal" style={{ width: 140 }} aria-label="MON amount" id="pool-deposit-input" />
+            <span style={{ fontSize: "0.85rem", color: "var(--vc-text-muted)" }}>MON</span>
+            <button className="btn btn-primary btn-sm" onClick={handleFund} disabled={funding} id="pool-deposit-btn">
+              {funding ? "Confirm in wallet…" : "Deposit to pool"}
             </button>
           </div>
+          {fundTx && (
+            <a className="btn btn-outline btn-sm" style={{ marginTop: "0.8rem" }} href={poolTxUrl(fundTx)} target="_blank" rel="noreferrer">
+              View funding on MonadScan ↗
+            </a>
+          )}
+        </div>
+
+        <div className="card">
+          <h2 style={{ fontSize: "1.05rem", marginBottom: "1rem" }}>Originated loans</h2>
+          {book === undefined || book === null ? (
+            <p style={{ fontSize: "0.85rem", color: "var(--vc-text-muted)" }}>
+              {book === null ? "Unavailable — see above." : "Loading…"}
+            </p>
+          ) : book.loans.length === 0 ? (
+            <p style={{ fontSize: "0.88rem", color: "var(--vc-text-muted)", textAlign: "center", padding: "1rem 0" }}>
+              No loans yet. Underwrite in the lender console, then the operator originates.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              {book.loans.map((l) => (
+                <div key={l.id} style={{
+                  display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.6rem",
+                  padding: "0.7rem 0.9rem", background: "var(--vc-surface-2)",
+                  borderRadius: "var(--radius-md)", fontSize: "0.85rem", flexWrap: "wrap",
+                }}>
+                  <span><strong>#{l.id}</strong> · {fmtMON(l.amount)} MON · {short(l.borrower)}</span>
+                  <span className={`badge ${l.repaid ? "badge-active" : "badge-challenged"}`}>
+                    {l.repaid ? "repaid" : `due ${new Date(Number(l.dueAt) * 1000).toLocaleDateString()}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="card" style={{ background: "var(--vc-success-dim)", borderColor: "rgba(14,107,62,0.25)" }}>
+          <p style={{ fontSize: "0.83rem", color: "var(--vc-text-secondary)", lineHeight: 1.65 }}>
+            <strong>Honest scope:</strong> fund → underwrite → originate → repay. That is the whole
+            contract — no tranches, no reserve, no waterfall. Anything beyond that is roadmap, not demo.
+          </p>
         </div>
       </div>
     </div>

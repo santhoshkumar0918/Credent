@@ -7,6 +7,7 @@
 // bonded attester) — the receipt parser surfaces that new attestation id.
 
 import { decodeEventLog, type Address, type Hex, type WalletClient } from "viem";
+import { parseEther } from "viem";
 import { ADDRESSES, MONAD_TESTNET_EXPLORER } from "@shared/constants";
 import { monadTestnet } from "./wagmi";
 import { getPublicClient } from "./contracts";
@@ -141,4 +142,18 @@ export async function repayLoan(
 
 export function poolTxUrl(txHash: string): string {
   return `${MONAD_TESTNET_EXPLORER}/tx/${txHash}`;
+}
+
+/** Anyone can fund the demo pool (payable, no minimum). */
+export async function fundPool(walletClient: WalletClient, amountMon: string): Promise<Hex> {
+  const account = walletClient.account;
+  if (!account) throw new Error("Wallet not connected.");
+  return walletClient.writeContract({
+    address: POOL_ADDRESS,
+    abi: [{ type: "function", name: "fund", inputs: [], outputs: [], stateMutability: "payable" }] as const,
+    functionName: "fund",
+    value: parseEther(amountMon),
+    account,
+    chain: monadTestnet,
+  });
 }
