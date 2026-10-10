@@ -275,6 +275,16 @@ input::placeholder, textarea::placeholder { color: var(--vc-text-muted); }
 }
 .section-gap { gap: 1.5rem; }
 
+/* Responsive two-column form grid — collapses on phones */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+@media (max-width: 640px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
 /* Stat card */
 .stat-card {
   display: flex;
@@ -616,6 +626,19 @@ input::placeholder, textarea::placeholder { color: var(--vc-text-muted); }
   100% { opacity: 1; transform: scale(1); }
 }
 .stamp-in { animation: stampIn 0.45s var(--ease-out) both; }
+
+/* Spinner — honest loading fallback */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid var(--vc-border-strong);
+  border-top-color: var(--vc-violet);
+  animation: spin 0.8s linear infinite;
+}
 
 /* Glow effects */
 .violet-glow { box-shadow: 0 0 40px var(--vc-violet-glow); }

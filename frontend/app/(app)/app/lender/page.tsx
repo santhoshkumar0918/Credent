@@ -231,7 +231,7 @@ export default function LenderPage() {
               <p style={{ fontSize: "0.82rem", color: "var(--vc-text-muted)", marginBottom: "1rem" }}>
                 Paste the values the subject disclosed — or load an attester preimage below. The hash is recomputed here.
               </p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem", marginBottom: "0.8rem" }}>
+              <div className="grid-2" style={{ marginBottom: "0.8rem" }}>
                 <div>
                   <label className="input-label">Attestation id</label>
                   <input className="input-field mono" value={form.attestationId}
@@ -255,7 +255,7 @@ export default function LenderPage() {
                     onChange={(e) => setForm({ ...form, timestamp: e.target.value })} placeholder="e.g. 1760000000" />
                 </div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.8rem", marginBottom: "0.8rem" }}>
+              <div className="grid-2" style={{ marginBottom: "0.8rem" }}>
                 <div>
                   <label className="input-label">Subject pseudonym</label>
                   <input className="input-field mono" value={form.subjectPseudonym}
