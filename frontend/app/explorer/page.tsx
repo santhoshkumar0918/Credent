@@ -5,7 +5,8 @@
 // sealed evidence receipt (never plaintext — amounts stay committed).
 // Kills the old self-redirect loop; this page IS the explorer.
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { getPublicClient, contracts } from "@/lib/contracts";
 import { EVENT_TYPES } from "@shared/types";
 import { ADDRESSES, MONAD_TESTNET_EXPLORER } from "@shared/constants";
@@ -29,19 +30,26 @@ function short(hex: string) {
 }
 
 export default function ExplorerPage() {
+  return (
+    <Suspense fallback={
+      <div className="page-container" style={{ paddingTop: "3rem", maxWidth: 720 }}>
+        <div className="skeleton" style={{ height: 40, width: "60%", marginBottom: "1rem" }} />
+        <div className="skeleton" style={{ height: 120 }} />
+      </div>
+    }>
+      <ExplorerInner />
+    </Suspense>
+  );
+}
+
+function ExplorerInner() {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("0");
   const [found, setFound] = useState<Found | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function lookup(e?: React.FormEvent) {
-    e?.preventDefault();
-    const id = Number(query);
-    if (!Number.isInteger(id) || id < 0) {
-      setError("Enter a non-negative attestation id.");
-      setFound(null);
-      return;
-    }
+  async function lookupById(id: number) {
     setLoading(true);
     setError(null);
     setFound(null);
@@ -67,6 +75,28 @@ export default function ExplorerPage() {
       setLoading(false);
     }
   }
+
+  async function lookup(e?: React.FormEvent) {
+    e?.preventDefault();
+    const id = Number(query);
+    if (!Number.isInteger(id) || id < 0) {
+      setError("Enter a non-negative attestation id.");
+      setFound(null);
+      return;
+    }
+    lookupById(id);
+  }
+
+  useEffect(() => {
+    const deep = searchParams.get("id");
+    if (deep !== null) {
+      setQuery(deep);
+      const id = Number(deep);
+      if (Number.isInteger(id) && id >= 0) lookupById(id);
+    }
+    // Deep-link once on mount; manual edits use the form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const status = found ? STATUS_LABELS[found.status] ?? "UNKNOWN" : null;
 
