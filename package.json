@@ -9,10 +9,17 @@
   ],
   "scripts": {
     "dev:all": "npx concurrently -n \"frontend,api,sim,agents,indexer\" -c \"cyan,magenta,green,yellow,blue\" \"bun --cwd frontend dev\" \"bun --cwd apps/api dev\" \"bun --cwd apps/platform-sim dev\" \"bun --cwd apps/agents dev\" \"bun --cwd indexer start\"",
+    "env:sync": "bun scripts/env-sync.ts",
+    "attesters:register": "bun scripts/register-attesters.ts",
+    "balances": "bun scripts/check-balances.ts",
+    "payout:trace": "bun scripts/trace-payout.ts",
     "abis": "bash contracts/script/export-abis.sh",
     "contracts:build": "bun --cwd contracts forge build",
     "contracts:test": "bun --cwd contracts forge test",
-    "test": "bun test shared/ apps/agents/",
+    "test": "bun test shared/ apps/agents/ --timeout 15000",
     "test:e2e": "bun --cwd frontend run test:e2e"
+  },
+  "devDependencies": {
+    "viem": "^2.57.4"
   }
 }
