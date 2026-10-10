@@ -90,8 +90,8 @@ export default function LoanPage() {
                 <div className="stat-label">Outstanding</div>
               </div>
               <div className="stat-card">
-                <div className="stat-value">{loan.repaymentShare}%</div>
-                <div className="stat-label">Repayment Share</div>
+                <div className="stat-value" style={{ fontSize: "1.1rem" }}>In Full (100%)</div>
+                <div className="stat-label">Repayment Terms</div>
               </div>
             </div>
             <div style={{
@@ -104,7 +104,7 @@ export default function LoanPage() {
               justifyContent: "space-between",
               alignItems: "center",
             }}>
-              <span>Next Repayment: <strong style={{ color: "var(--vc-text-primary)" }}>{loan.activeLoan.nextRepayment}</strong></span>
+              <span>Full Repayment Due: <strong style={{ color: "var(--vc-text-primary)" }}>{loan.activeLoan.amount.toLocaleString()} MON (₹{loan.activeLoan.amount.toLocaleString()} eqv)</strong></span>
               <span style={{ fontSize: "0.8rem", color: "var(--vc-text-muted)" }}>Due {loan.activeLoan.nextDate}</span>
             </div>
             <div style={{
@@ -115,7 +115,7 @@ export default function LoanPage() {
               fontSize: "0.8rem",
               color: "var(--vc-success)",
             }}>
-              ✓ Repayment routed by platform integration at payout time
+              ✓ On full repayment, MockLendingPool automatically mints a new on-chain P2P_LOAN_REPAYMENT attestation, raising your credit limit.
             </div>
           </div>
         )}
@@ -123,13 +123,14 @@ export default function LoanPage() {
         {/* Explanation */}
         <div className="card">
           <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1rem", marginBottom: "0.75rem" }}>
-            Underwriting Explanation
+            Underwriting & Repayment Lifecycle
           </h2>
           <p style={{ color: "var(--vc-text-secondary)", fontSize: "0.9rem", lineHeight: 1.7 }}>
-            {loan.explanation}
+            Borrow, repay in full on-chain, and your repayment is automatically attested on-chain to raise your credit score and future borrowing limit. Rupee (₹) amounts are demo display values; the underlying pool lends and settles in testnet MON.
           </p>
           <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <span className="badge badge-demo">Repayment routed by platform (contract router is roadmap)</span>
+            <span className="badge badge-demo">Settled in native testnet MON</span>
+            <span className="badge badge-demo">Full repayment mints new attestation</span>
           </div>
         </div>
 
