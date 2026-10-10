@@ -134,7 +134,13 @@ active reads + register/top-up writes + real attest() with preimage receipt
 `/explorer?id=` deep links). Phase 4 LENDER DONE: client-side disclosure
 re-verification naming failed checks + id-gap completeness vs enumeration +
 verified-set underwriting writes + pool book + indexer attester mirror
-(`6d3f11c`, `frontend/lib/lender.ts`). Next: Phase 5 disputes + pool honesty.
+(`6d3f11c`, `frontend/lib/lender.ts`). Phase 5 DISPUTES + POOL DONE: live
+challenge list from ChallengeModule + real 0.5 MON openChallenge (grant/
+window/bond errors translated) + winner claims + red-team honesty card, no
+fake admin-resolve modal (`a9c02ba`, `frontend/lib/dispute.ts`); pool
+stripped to fund/underwrite/originate/repay with live balance + real fund()
+(`a9c02ba`). Next: Phase 6 polish (empty/error states, mobile pass, e2e
+repair, kill mock-data.ts).
 
 CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale):
 - ConsentRegistry 0x6f47… runs PRE-nonce code. Relayer old ABI MATCHES it:
