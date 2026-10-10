@@ -1,10 +1,32 @@
 import type { FastifyInstance } from "fastify";
+import postgres from "postgres";
 import { publicClient } from "../relayer/gas-relayer";
+
+const sql = postgres(process.env.DATABASE_URL || "postgres://postgres:password@localhost:5432/vouchain", {
+  max: 3,
+  idle_timeout: 10,
+});
 
 const INDEXER_URL = process.env.INDEXER_URL || "http://localhost:3111";
 const AGENTS_URL = process.env.AGENTS_SERVICE_URL || "http://localhost:3003";
 
 export async function subjectsRoutes(fastify: FastifyInstance) {
+  // Real Indexed Attestations Endpoint for My Record Screen
+  fastify.get("/api/subjects/:pseudonym/attestations", async (req, reply) => {
+    const { pseudonym } = req.params as { pseudonym: string };
+    try {
+      const rows = await sql`
+        SELECT id, attester, subject_pseudonym, event_type, commitment_hash, evidence_hash, block_number, block_timestamp, tx_hash, status
+        FROM attestations
+        WHERE LOWER(subject_pseudonym) = LOWER(${pseudonym})
+        ORDER BY id DESC
+      `;
+      return { attestations: rows };
+    } catch (err: any) {
+      return { attestations: [] };
+    }
+  });
+
   // Single Consent Path: lender console -> API -> ConsentRegistry.isAuthorized check -> Indexer proxy
   fastify.get("/api/subjects/:pseudonym/summary", async (req, reply) => {
     const { pseudonym } = req.params as { pseudonym: string };

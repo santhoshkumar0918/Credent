@@ -5,6 +5,14 @@ import { generateScoreExplanations } from "../services/explainer.js";
 export async function scoreRoutes(fastify: FastifyInstance) {
   fastify.get("/score/:pseudonym", async (req, reply) => {
     const { pseudonym } = req.params as { pseudonym: string };
+
+    if (!pseudonym || !/^0x[a-fA-F0-9]{8,64}$/i.test(pseudonym)) {
+      return reply.status(400).send({
+        error: "Invalid pseudonym format. Must be a valid hex address or bytes32 hash starting with 0x.",
+        code: "INVALID_PSEUDONYM",
+      });
+    }
+
     const query = req.query as {
       total?: string;
       onTime?: string;

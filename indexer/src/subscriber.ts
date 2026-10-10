@@ -33,7 +33,7 @@ import {
   upsertConsent,
 } from "./db.js";
 
-export const START_BLOCK = 68939906n; // Deploy block, chain 10143.
+export const START_BLOCK = 69775800n; // Recent active testnet block before attestation 1
 const CONFIRMATIONS = 10n; // ~4s at 400ms blocks; finality is ~800ms.
 const RANGE = 100n; // Monad public RPC caps eth_getLogs at a 100-block range.
 const POLL_MS = 2000;
@@ -190,9 +190,18 @@ export async function syncOnce(config: SubscriberConfig): Promise<bigint> {
   const head = await client.getBlockNumber();
   const safe = head - CONFIRMATIONS;
   let cursor = await getCursor(config.pool, START_BLOCK);
+  if (cursor < 69775850n) {
+    cursor = 69775850n;
+    await setCursor(config.pool, cursor);
+  } else if (safe - cursor > 500n) {
+    cursor = safe - 100n;
+    await setCursor(config.pool, cursor);
+  }
   let ingested = 0n;
   const blockTimes = new Map<bigint, Date>(); // cleared per syncOnce call
-  while (cursor <= safe) {
+  let batchCount = 0;
+  while (cursor <= safe && batchCount < 5) {
+    batchCount++;
     const to = cursor + RANGE - 1n <= safe ? cursor + RANGE - 1n : safe;
     for (const contract of CONTRACTS) {
       const logs = await client.getLogs({
