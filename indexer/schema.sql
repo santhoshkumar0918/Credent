@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS attestations (
   block_number      BIGINT NOT NULL,
   block_timestamp   TIMESTAMPTZ,
   tx_hash           TEXT NOT NULL,
-  tx_hash           TEXT NOT NULL,
   status            TEXT NOT NULL DEFAULT 'ACTIVE',
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );

@@ -66,27 +66,29 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Admin Wallet Balances Inspector */}
-      <div className="card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 600 }}>System Wallet Balances & Bonding</h2>
-          <span className="badge badge-demo" style={{ fontSize: "0.68rem" }}>Monad Testnet</span>
-        </div>
+      {/* Admin Wallet Balances Inspector (Demo Mode Only) */}
+      {process.env.NEXT_PUBLIC_DEMO_MODE !== "false" && (
+        <div className="card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 600 }}>System Wallet Balances & Bonding</h2>
+            <span className="badge badge-demo" style={{ fontSize: "0.68rem" }}>Monad Testnet Demo</span>
+          </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-          {wallets.map((w, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem", borderRadius: "var(--radius-md)", background: "var(--vc-surface-2)" }}>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: "0.88rem" }}>{w.roleName}</div>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--vc-text-muted)" }}>{w.address}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+            {wallets.map((w, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem", borderRadius: "var(--radius-md)", background: "var(--vc-surface-2)" }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: "0.88rem" }}>{w.roleName}</div>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--vc-text-muted)" }}>{w.address}</div>
+                </div>
+                <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#38BDF8", fontSize: "0.9rem" }}>
+                  {w.balanceMON.includes("MON") ? w.balanceMON : `${w.balanceMON} MON`}
+                </span>
               </div>
-              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#38BDF8", fontSize: "0.9rem" }}>
-                {w.balanceMON.includes("MON") ? w.balanceMON : `${w.balanceMON} MON`}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="card" style={{ padding: "1.5rem", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
         <h2 style={{ fontSize: "1.1rem", fontWeight: 600, color: "#EF4444", marginBottom: "0.5rem" }}>Session Security</h2>
