@@ -123,14 +123,27 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
+None. (Member 2 & 3 operational bridge completed; live testnet transactions proven).
 
-- Member 3 Autonomous Agents track built and verified on branch `changes-sree`.
-
-## Blocked / waiting on
-
-- None code-blocking.
+## Last completed
+- **Environment & Secret Hygiene**:
+  - `ADMIN_PASSWORD` rotated to env-only random secret. Removed hardcoded `vouchain-admin-secret` from `apps/api/src/routes/demo.ts` and `frontend/app/(app)/app/challenge/page.tsx`.
+  - `/app/settings` system wallet balances panel gated behind `process.env.NEXT_PUBLIC_DEMO_MODE !== "false"`.
+  - `GET /api/disclosures` secured in `apps/api/src/routes/consent.ts` requiring `SERVICE_API_KEY` for microservices or on-chain `isAuthorized(subjectPseudonym, caller)` check.
+  - Multi-workspace environment sync script added (`bun run env:sync` via `scripts/env-sync.ts`), distributing environment variables across root, `frontend`, `apps/platform-sim`, `apps/api`, `apps/agents`, and `indexer`.
+- **On-Chain Testnet Activations (Monad Testnet 10143)**:
+  - `scripts/register-attesters.ts` (`bun run attesters:register`): verified attester state on `AttesterRegistry` (`0x84a84cfe2fe62499ba0fdf9cf49f617865f4152d`).
+  - Reactivated platform attester `0xDCBde073aEBEA2d92394D0206BE5235CEb2eEd2D` with `topUpBond{value: 0.5 MON}()`. Tx: `0x0fd746b2c615bb3721afb02e5e7944626976ade59c83188d8fc4185c0b9548bc`. Active: YES, Bond: 5 MON.
+  - Live on-chain payout attestation proven via `bun run payout:trace` (`scripts/trace-payout.ts`): Tx: `0x494cb870bcdd59352f9eca0ea8146a6af143ceda1e23bd6d452fcccf68a2448f` in Block #69775867, writing Attestation ID 1 to `AttestationRegistry` (`0x7fceaa85c5f74d54554bffd46a41653fd03da962`).
+- **Smart Contract Mechanics Verified**:
+  - `MockLendingPool.sol`: `recordRepayment(uint256 loanId)` is `external payable nonReentrant`. Anyone (e.g. platform-sim) can call it directly with native `MON` (`msg.value >= l.amount`). Automatically writes a new attestation on-chain (`EventType.P2P_LOAN_REPAYMENT`).
+  - `ChallengeModule.sol`: `resolve(challengeId, challengerWins)` is `onlyArbiter` and can be resolved **immediately**; does NOT require waiting for the 7-day challenge window.
+- **Builds & Tests Verified**:
+  - `frontend`: `next build` clean (26 routes prerendered).
+  - `apps/platform-sim`: `next build` clean (5 routes prerendered).
+  - `apps/api`: `bun run build` clean (bundled 2,165 modules).
+  - Test suites: 22/22 unit tests green across `shared` and `apps/agents`.
 
 ## Next task
-
-1. Run full stack demo rehearsal connecting `apps/platform-sim` (port 3002) -> `apps/agents` (port 3003) -> Monad testnet contracts -> `apps/api` (port 3001) -> `frontend` (port 3000).
-2. Live testnet rehearsal of plant false claim -> Watcher challenge -> Arbiter slash.
+1. Rehearse the live accountability climax: Plant False Claim in platform-sim -> Watcher scans & opens on-chain challenge on `ChallengeModule` -> Arbiter calls `resolve(challengeId, true)` -> Slashes bond and updates reputation.
+2. Demo video walkthrough rehearsal following PRD section 15 script.
