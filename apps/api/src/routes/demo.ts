@@ -177,11 +177,10 @@ export async function demoRoutes(fastify: FastifyInstance) {
 
   // Admin Arbiter Challenge Resolution Endpoint
   fastify.post("/api/demo/resolve-challenge", async (req, reply) => {
-    const body = ResolveChallengeSchema.parse(req.body);
-    const expectedPassword = process.env.ADMIN_PASSWORD || "vouchain-admin-secret";
+    const expectedPassword = process.env.ADMIN_PASSWORD;
 
-    if (body.adminPassword !== expectedPassword) {
-      return reply.status(401).send({ error: "Invalid admin password", code: "UNAUTHORIZED" });
+    if (!expectedPassword || body.adminPassword !== expectedPassword) {
+      return reply.status(401).send({ error: "Invalid admin password or ADMIN_PASSWORD not configured", code: "UNAUTHORIZED" });
     }
 
     const arbiterKey = (process.env.ARBITER_PRIVATE_KEY ||

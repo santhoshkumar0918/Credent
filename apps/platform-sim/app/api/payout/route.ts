@@ -32,6 +32,7 @@ const ATTEST_ABI = [
     name: "attest",
     inputs: [
       { name: "subjectPseudonym", type: "bytes32" },
+      { name: "eventType", type: "uint8" },
       { name: "commitmentHash", type: "bytes32" },
       { name: "evidenceHash", type: "bytes32" },
     ],
@@ -74,10 +75,10 @@ export async function POST(req: Request) {
           address: ATTESTATION_REGISTRY_ADDRESS,
           abi: ATTEST_ABI,
           functionName: "attest",
-          args: [pseudonymHex, fakeCommitmentHash, fakeEvidenceHash],
+          args: [pseudonymHex, 2, fakeCommitmentHash, fakeEvidenceHash],
         });
-      } catch {
-        // Fallback for offline RPC
+      } catch (err) {
+        console.warn("Failed to write fabricated attestation on-chain:", err);
       }
 
       return NextResponse.json({
@@ -113,6 +114,7 @@ export async function POST(req: Request) {
       proofTier,
       platformSignature,
       isRedTeam: false,
+      submitOnChain: true,
     };
 
     let txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}`;
@@ -128,7 +130,7 @@ export async function POST(req: Request) {
 
       if (res.ok) {
         const data = await res.json();
-        txHash = data.commitmentHash || data.txHash || txHash;
+        txHash = data.txHash || data.commitmentHash || txHash;
         commitmentHash = data.commitmentHash || payloadHash;
         evidenceHash = data.evidenceHash || payloadHash;
       }
