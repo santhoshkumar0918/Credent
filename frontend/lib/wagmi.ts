@@ -1,7 +1,10 @@
 // Wallet + chain wiring (wagmi v3 + viem 2).
 // Monad testnet: chain ID 10143 — must match shared/constants.ts.
-// Privy embedded wallets surface through wagmi via the PrivyWagmiConnector
-// (set up inside providers.tsx). This file exports the base config.
+// Two signing paths, honestly separated:
+// - External wallets (MetaMask etc.) connect through wagmi injected().
+// - The Privy embedded wallet (every OTP login) signs through the
+//   lib/wallet.ts seam (EIP-1193 provider + viem walletClient) —
+//   wagmi never touches it. Contract reads use lib/contracts.ts.
 
 import { http, createConfig } from "wagmi";
 import { defineChain } from "viem";
