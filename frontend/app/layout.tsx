@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, Newsreader, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { RoleProvider } from "@/lib/role-context";
@@ -10,7 +10,7 @@ const inter = Inter({
   display: "swap",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const newsreader = Newsreader({
   variable: "--font-heading",
   subsets: ["latin"],
   display: "swap",
@@ -41,7 +41,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full`}
+      className={`${inter.variable} ${newsreader.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="min-h-full">
         <Providers>
