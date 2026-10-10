@@ -131,7 +131,10 @@ real repay with attestation-id receipt (`f6a735a`, `frontend/lib/pool.ts`);
 slim live home (`a354837`). Phase 3 ATTESTER DONE: live bond/reputation/
 active reads + register/top-up writes + real attest() with preimage receipt
 + newest-first chain history (`2109748`, `frontend/lib/attester.ts`;
-`/explorer?id=` deep links). Next: Phase 4 lender (needs D3 reputation proxy).
+`/explorer?id=` deep links). Phase 4 LENDER DONE: client-side disclosure
+re-verification naming failed checks + id-gap completeness vs enumeration +
+verified-set underwriting writes + pool book + indexer attester mirror
+(`6d3f11c`, `frontend/lib/lender.ts`). Next: Phase 5 disputes + pool honesty.
 
 CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale):
 - ConsentRegistry 0x6f47… runs PRE-nonce code. Relayer old ABI MATCHES it:
