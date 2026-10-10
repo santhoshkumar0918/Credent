@@ -123,10 +123,24 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-Frontend rewire Phase 0+1 IN PROGRESS (local commits, NOT pushed):
-`83ab67a` sunlit tokens + Newsreader → `4693ae9` nav seam + mobile nav →
-`3b4f09b` real /explorer + shim deletion → `e18ac87` signing seam + onboarding →
-`cbeb49d` Turbopack ABI fix. Next: Phase 2 borrower loop (needs D1 relayer nonce).
+Frontend rewire Phase 2 BORROWER LOOP DONE (local commits, NOT pushed):
+consent grants sign EIP-712 (DEPLOYED pre-nonce struct) + relay-then-direct
+submit (`f9b6977`, seam `frontend/lib/consent.ts`); sealed live record +
+on-chain grant checks + real revoke (`5225152`); live underwriting reads +
+real repay with attestation-id receipt (`f6a735a`, `frontend/lib/pool.ts`);
+slim live home (`a354837`). Next: Phase 3 attester (needs D3 reputation proxy).
+
+CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale):
+- ConsentRegistry 0x6f47… runs PRE-nonce code. Relayer old ABI MATCHES it:
+  relay path works today; D1 (relayer nonce) must land TOGETHER with the
+  RedeployConsent broadcast, not before. Frontend signs old struct until then.
+- MockLendingPool 0xf2e7… IS a registered+active attester (repay→attest works).
+- nextAttestationId = 2, nextLoanId = 0. originateLoan is ONLYOWNER —
+  demo operator originates with the deployer key, e.g.:
+  cast send 0xf2e79aa5f3344992fca9f4ff5a4736716114e0d7 \
+    "originateLoan(bytes32,address,uint256)" <pseudonym> <borrower> <wei> \
+    --rpc-url https://testnet-rpc.monad.xyz --account <deployer> \
+    (only after requestUnderwriting with lender-verified numbers; MIN_SCORE 50).
 
 ## Last completed
 - **Environment & Secret Hygiene**:
