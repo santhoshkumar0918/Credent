@@ -128,7 +128,10 @@ consent grants sign EIP-712 (DEPLOYED pre-nonce struct) + relay-then-direct
 submit (`f9b6977`, seam `frontend/lib/consent.ts`); sealed live record +
 on-chain grant checks + real revoke (`5225152`); live underwriting reads +
 real repay with attestation-id receipt (`f6a735a`, `frontend/lib/pool.ts`);
-slim live home (`a354837`). Next: Phase 3 attester (needs D3 reputation proxy).
+slim live home (`a354837`). Phase 3 ATTESTER DONE: live bond/reputation/
+active reads + register/top-up writes + real attest() with preimage receipt
++ newest-first chain history (`2109748`, `frontend/lib/attester.ts`;
+`/explorer?id=` deep links). Next: Phase 4 lender (needs D3 reputation proxy).
 
 CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale):
 - ConsentRegistry 0x6f47… runs PRE-nonce code. Relayer old ABI MATCHES it:
@@ -141,6 +144,10 @@ CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale)
     "originateLoan(bytes32,address,uint256)" <pseudonym> <borrower> <wei> \
     --rpc-url https://testnet-rpc.monad.xyz --account <deployer> \
     (only after requestUnderwriting with lender-verified numbers; MIN_SCORE 50).
+- Amount encoding convention (frontend attester ↔ lender MUST match):
+  2-decimal minor units via shared parseAmount(x, 2), e.g. ₹24,000.00 →
+  2400000. On-chain uint256 is unit-agnostic; the UI convention is
+  documented here, not in the contract.
 
 ## Last completed
 - **Environment & Secret Hygiene**:
