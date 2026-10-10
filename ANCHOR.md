@@ -139,7 +139,7 @@ None. (Member 2 & 3 operational bridge completed; live testnet transactions prov
   - `MockLendingPool.sol`: `recordRepayment(uint256 loanId)` is `external payable nonReentrant`. Anyone (e.g. platform-sim) can call it directly with native `MON` (`msg.value >= l.amount`). Automatically writes a new attestation on-chain (`EventType.P2P_LOAN_REPAYMENT`).
   - `ChallengeModule.sol`: `resolve(challengeId, challengerWins)` is `onlyArbiter` and can be resolved **immediately**; does NOT require waiting for the 7-day challenge window.
 - **Builds & Tests Verified**:
-  - `frontend`: `next build` clean (26 routes prerendered).
+  - `frontend`: `next build` clean (all 26 routes prerendered cleanly after resolving `@shared/commitments` Turbopack module paths).
   - `apps/platform-sim`: `next build` clean (5 routes prerendered).
   - `apps/api`: `bun run build` clean (bundled 2,165 modules).
   - Test suites: 22/22 unit tests green across `shared` and `apps/agents`.
