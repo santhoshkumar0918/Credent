@@ -93,10 +93,38 @@ function ExplorerInner() {
       setQuery(deep);
       const id = Number(deep);
       if (Number.isInteger(id) && id >= 0) lookupById(id);
+    } else {
+      loadRecent();
     }
     // Deep-link once on mount; manual edits use the form.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const [recent, setRecent] = useState<Found[] | null>(null);
+
+  async function loadRecent() {
+    try {
+      const client = getPublicClient();
+      const total = Number(
+        (await client.readContract({
+          ...contracts.attestationRegistry,
+          functionName: "nextAttestationId",
+        })) as bigint,
+      );
+      const rows: Found[] = [];
+      for (let id = total - 1; id >= 0 && rows.length < 5; id--) {
+        const a = (await client.readContract({
+          ...contracts.attestationRegistry,
+          functionName: "getAttestation",
+          args: [BigInt(id)],
+        })) as unknown as Found;
+        rows.push(a);
+      }
+      setRecent(rows);
+    } catch {
+      setRecent([]);
+    }
+  }
 
   const status = found ? STATUS_LABELS[found.status] ?? "UNKNOWN" : null;
 
@@ -167,6 +195,47 @@ function ExplorerInner() {
               View registry on MonadScan ↗
             </a>
           </div>
+        </div>
+      )}
+
+      {!found && !loading && (
+        <div style={{ marginTop: "2.5rem" }}>
+          <p className="eyebrow" style={{ marginBottom: "0.9rem" }}>Latest on-chain</p>
+          {recent === null ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              <div className="skeleton" style={{ height: 58 }} />
+              <div className="skeleton" style={{ height: 58 }} />
+            </div>
+          ) : recent.length === 0 ? (
+            <p style={{ fontSize: "0.85rem", color: "var(--vc-text-muted)" }}>
+              Registry unreadable right now — the RPC may be down. Your lookup above still works when it recovers.
+            </p>
+          ) : (
+            <div className="stagger" style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+              {recent.map((r) => (
+                <button
+                  key={r.id.toString()}
+                  onClick={() => { setQuery(r.id.toString()); lookupById(Number(r.id)); }}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem",
+                    padding: "0.8rem 1rem", background: "var(--vc-surface-1)", textAlign: "left",
+                    borderRadius: "var(--radius-md)", border: "1px solid var(--vc-border)", cursor: "pointer",
+                    width: "100%",
+                  }}
+                >
+                  <span>
+                    <strong style={{ fontSize: "0.88rem" }}>#{r.id.toString()} · {EVENT_TYPES[r.eventType] ?? "Event"}</strong>
+                    <span className="mono" style={{ display: "block", fontSize: "0.7rem", color: "var(--vc-text-muted)", marginTop: "0.15rem" }}>
+                      {short(r.commitmentHash)} · {new Date(Number(r.timestamp) * 1000).toLocaleDateString()}
+                    </span>
+                  </span>
+                  <span className={`badge ${STATUS_BADGE[r.status] ?? "badge-disputed"}`}>
+                    {STATUS_LABELS[r.status] ?? "?"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

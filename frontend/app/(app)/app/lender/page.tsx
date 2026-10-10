@@ -202,7 +202,8 @@ export default function LenderPage() {
         </div>
 
         {tab === "verify" && (
-          <div style={{ display: "grid", gap: "1.25rem", maxWidth: 680 }}>
+          <div className="verify-layout">
+            <div style={{ display: "grid", gap: "1.25rem", maxWidth: 680, minWidth: 0 }}>
             {/* Subject + enumeration */}
             <div className="card">
               <h2 style={{ fontSize: "1.05rem", marginBottom: "0.5rem" }}>Whose record?</h2>
@@ -366,6 +367,16 @@ export default function LenderPage() {
                 {comp.state === "unknown" && "Completeness unknown — load the enumeration above before deciding."}
               </div>
             </div>
+            </div>
+            <aside className="verify-rail card" style={{ padding: "1.25rem" }}>
+              <p className="eyebrow" style={{ marginBottom: "0.75rem" }}>How verification works</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem", fontSize: "0.83rem", color: "var(--vc-text-secondary)", lineHeight: 1.6 }}>
+                <p><strong style={{ color: "var(--vc-text-primary)" }}>1 · Recompute.</strong> Amount, outcome, timestamp and salt are hashed in this browser with the canonical commitment function.</p>
+                <p><strong style={{ color: "var(--vc-text-primary)" }}>2 · Compare.</strong> The recomputed hash must equal the on-chain commitment — plus matching subject, event and id.</p>
+                <p><strong style={{ color: "var(--vc-text-primary)" }}>3 · Complete.</strong> Verified ids are checked against the full enumeration. Gaps mean hidden history.</p>
+                <p><strong style={{ color: "var(--vc-text-primary)" }}>4 · Decide.</strong> Only verified disclosures feed underwriting. Nothing else counts.</p>
+              </div>
+            </aside>
           </div>
         )}
 

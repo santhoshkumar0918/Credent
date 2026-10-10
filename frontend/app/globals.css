@@ -285,6 +285,18 @@ input::placeholder, textarea::placeholder { color: var(--vc-text-muted); }
   .grid-2 { grid-template-columns: 1fr; }
 }
 
+/* Verify layout — form column + sticky explainer rail on wide screens */
+.verify-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+@media (min-width: 1100px) {
+  .verify-layout { grid-template-columns: minmax(0, 680px) minmax(260px, 340px); }
+}
+.verify-rail { position: sticky; top: 1.5rem; }
+
 /* Stat card */
 .stat-card {
   display: flex;
