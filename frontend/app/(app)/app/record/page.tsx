@@ -1,8 +1,11 @@
 "use client";
 
 import { MOCK_ATTESTATIONS, MOCK_CONSENTS, MOCK_SCORE } from "@/lib/mock-data";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { usePrivy } from "@privy-io/react-auth";
+import { pseudonymFor } from "@shared/commitments";
+import { apiFetch } from "@/lib/api-client";
 
 const EVENT_LABELS: Record<string, string> = {
   GIG_PAYOUT: "Gig payout",
@@ -78,13 +81,48 @@ function RevokeModal({
 }
 
 export default function MyRecordPage() {
+  const { user } = usePrivy();
   const [showHex, setShowHex] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<(typeof MOCK_CONSENTS)[0] | null>(null);
+  const [liveAttestations, setLiveAttestations] = useState<any[]>([]);
 
-  const onTimeCount = MOCK_ATTESTATIONS.filter(
+  const userAddress = (user?.wallet?.address || "0x944115Eb0Ad1A2c86b0FBDB4918930C220ffde28") as `0x${string}`;
+  const platformAttester = "0xDCBde073aEBEA2d92394D0206BE5235CEb2eEd2D" as `0x${string}`;
+  const subjectPseudonym = pseudonymFor(userAddress, platformAttester);
+
+  useEffect(() => {
+    async function loadRealAttestations() {
+      try {
+        const res = await apiFetch<{ attestations: any[] }>(`/api/subjects/${subjectPseudonym}/attestations`);
+        if (res.attestations && res.attestations.length > 0) {
+          const mapped = res.attestations.map((a: any) => ({
+            id: `att_${a.id}`,
+            eventType: a.event_type,
+            amount: "₹25,000",
+            outcome: "ON_TIME",
+            tier: 2,
+            status: a.status,
+            platform: "SwiftDeliver Pilot",
+            date: a.block_timestamp ? new Date(a.block_timestamp).toLocaleDateString() : "Live on-chain",
+            commitmentHash: a.commitment_hash,
+            txHash: a.tx_hash,
+            isLive: true,
+          }));
+          setLiveAttestations(mapped);
+        }
+      } catch {
+        // Fallback to initial display
+      }
+    }
+    loadRealAttestations();
+  }, [subjectPseudonym]);
+
+  const displayedAttestations = [...liveAttestations, ...MOCK_ATTESTATIONS];
+
+  const onTimeCount = displayedAttestations.filter(
     (a) => a.outcome === "ON_TIME"
   ).length;
-  const total = MOCK_ATTESTATIONS.length;
+  const total = displayedAttestations.length;
 
   return (
     <div className="fade-in">
@@ -157,7 +195,7 @@ export default function MyRecordPage() {
             Payment history
           </h2>
           <div className="timeline">
-            {MOCK_ATTESTATIONS.map((a) => {
+            {displayedAttestations.map((a) => {
               const oc = OUTCOME_CONFIG[a.outcome] ?? OUTCOME_CONFIG.ON_TIME;
               return (
                 <div key={a.id} className="timeline-item">
@@ -169,6 +207,11 @@ export default function MyRecordPage() {
                       <strong style={{ fontSize: "0.9rem" }}>
                         {EVENT_LABELS[a.eventType] ?? a.eventType} — {a.amount}
                       </strong>
+                      {a.isLive && (
+                        <span className="badge" style={{ background: "rgba(124, 58, 237, 0.2)", color: "#A78BFA", border: "1px solid rgba(124, 58, 237, 0.4)", fontSize: "0.68rem" }}>
+                          ⚡ Monad Testnet Live
+                        </span>
+                      )}
                       <span style={{
                         fontSize: "0.78rem",
                         color: a.outcome === "ON_TIME" ? "var(--vc-success)" : a.outcome === "LATE" ? "var(--vc-warning)" : "var(--vc-danger)",

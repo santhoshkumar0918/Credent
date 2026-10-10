@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { usePrivy } from "@privy-io/react-auth";
+import { pseudonymFor } from "@shared/commitments";
 
 const MOCK_LENDERS = [
-  { address: "0xAbCd...1234", name: "MicroLend Finance" },
-  { address: "0xEfGh...5678", name: "QuickCredit NBFC" },
-  { address: "0xIjKl...9012", name: "GreenPool DeFi" },
+  { address: "0xC3e95328adaB4C416664D1520DDceDc337E847f6", name: "Credent Watcher / Auditor (Pre-grant for Fraud Challenge)" },
+  { address: "0xAbCd1234567890abcdef1234567890abcdef1234", name: "MicroLend Finance (Demo Lending Console)" },
+  { address: "0xEfGh1234567890abcdef1234567890abcdef5678", name: "QuickCredit NBFC" },
+  { address: "0xIjKl1234567890abcdef1234567890abcdef9012", name: "GreenPool DeFi" },
 ];
 
 const EVENT_TYPES = [
@@ -27,6 +30,7 @@ const EXPIRY_OPTIONS = [
 type Step = 1 | 2 | 3 | 4;
 
 export default function ConsentPage() {
+  const { user } = usePrivy();
   const [step, setStep] = useState<Step>(1);
   const [selectedLender, setSelectedLender] = useState<string | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -34,7 +38,11 @@ export default function ConsentPage() {
   const [signing, setSigning] = useState(false);
   const [done, setDone] = useState(false);
 
-  const lenderName = MOCK_LENDERS.find((l) => l.address === selectedLender)?.name;
+  const userAddress = (user?.wallet?.address || "0x944115Eb0Ad1A2c86b0FBDB4918930C220ffde28") as `0x${string}`;
+  const platformAttester = "0xDCBde073aEBEA2d92394D0206BE5235CEb2eEd2D" as `0x${string}`;
+  const subjectPseudonym = pseudonymFor(userAddress, platformAttester);
+
+  const lenderName = MOCK_LENDERS.find((l) => l.address.toLowerCase() === selectedLender?.toLowerCase())?.name;
 
   function toggleType(tag: string) {
     setSelectedTypes((prev) =>
@@ -44,15 +52,16 @@ export default function ConsentPage() {
 
   async function handleSign() {
     setSigning(true);
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
     try {
       // Post disclosure envelope to backend API store
-      await fetch("/api/consent/envelopes", {
+      const res = await fetch(`${API_BASE}/api/consent/envelopes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          subjectPseudonym: "0x5f2e0000000000000000000000000000000000000000000000000000000000b1",
-          viewerAddress: selectedLender || "0xAbCd1234567890abcdef1234567890abcdef1234",
-          scopeTags: selectedTypes,
+          subjectPseudonym,
+          viewerAddress: selectedLender || "0xC3e95328adaB4C416664D1520DDceDc337E847f6",
+          scopeTags: selectedTypes.length > 0 ? selectedTypes : ["GIG_PAYOUT"],
           encryptedPayload: {
             amount: "25000.00",
             eventType: selectedTypes[0] || "GIG_PAYOUT",
@@ -60,13 +69,17 @@ export default function ConsentPage() {
             timestamp: Math.floor(Date.now() / 1000),
             salt: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
             proofTier: 2,
-            attester: "0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d",
-            commitmentHash: "0x9c3da01234567890123456789abcdef0123456789abcdef0123456789abcdef0",
+            attester: platformAttester,
+            commitmentHash: "0xc97d6827bd75b51c75661facf5b17c442563bd3576a5ee341062b6d06e6cb3d3",
           },
         }),
       });
-    } catch {
-      // Local fallback
+
+      if (!res.ok) {
+        console.warn("Envelope storage responded with error:", res.status);
+      }
+    } catch (err) {
+      console.warn("Could not post disclosure envelope to API, continuing:", err);
     }
 
     setSigning(false);

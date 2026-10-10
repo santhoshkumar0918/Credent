@@ -4,8 +4,10 @@ import { MOCK_ATTESTATIONS, MOCK_SCORE, MOCK_ATTESTERS } from "@/lib/mock-data";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { apiFetch } from "@/lib/api-client";
+import { usePrivy } from "@privy-io/react-auth";
+import { pseudonymFor } from "@shared/commitments";
 
-const MOCK_SUBJECT = "0x5f2e...b1 (Meena — SwiftDeliver pilot)";
+const MOCK_SUBJECT = "SwiftDeliver Pilot Worker (Meena)";
 
 function VerificationBadge({ ok }: { ok: boolean }) {
   return (
@@ -23,6 +25,7 @@ function VerificationBadge({ ok }: { ok: boolean }) {
 }
 
 export default function LenderPage() {
+  const { user } = usePrivy();
   const [tab, setTab] = useState<"request" | "console">("request");
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -32,11 +35,15 @@ export default function LenderPage() {
   const [envelopeData, setEnvelopeData] = useState<any>(null);
   const [tampered, setTampered] = useState(false);
 
+  const userAddress = (user?.wallet?.address || "0x944115Eb0Ad1A2c86b0FBDB4918930C220ffde28") as `0x${string}`;
+  const platformAttester = "0xDCBde073aEBEA2d92394D0206BE5235CEb2eEd2D" as `0x${string}`;
+  const subjectPseudonym = pseudonymFor(userAddress, platformAttester);
+
   async function handleLoad() {
     setLoading(true);
     setTampered(false);
     try {
-      const res = await apiFetch<{ authorized: boolean; envelope: any }>("/api/consent/envelopes?subjectPseudonym=0x5f2e0000000000000000000000000000000000000000000000000000000000b1");
+      const res = await apiFetch<{ authorized: boolean; envelope: any }>(`/api/consent/envelopes?subjectPseudonym=${subjectPseudonym}`);
       setEnvelopeData(res.envelope);
       setLoaded(true);
       toast.success("Consented disclosure envelope loaded — on-chain grant verified");

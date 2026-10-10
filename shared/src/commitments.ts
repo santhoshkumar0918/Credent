@@ -9,7 +9,7 @@ import {
   EVENT_TYPE_INDEX,
   type CommitmentInput,
   type Hex,
-} from "./types.js";
+} from "./types";
 
 export function hashCommitment(input: CommitmentInput): Hex {  return keccak256(
     encodeAbiParameters(
