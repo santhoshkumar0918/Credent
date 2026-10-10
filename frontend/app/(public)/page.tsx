@@ -12,7 +12,7 @@ const FEATURES = [
   {
     icon: "🔐",
     title: "You own the key",
-    desc: "Details stay encrypted. You choose who sees what, and for how long. Revoke anytime.",
+    desc: "Details stay sealed in on-chain commitments. You choose who sees what, and for how long. Revoke anytime.",
   },
   {
     icon: "⚖️",
@@ -22,7 +22,7 @@ const FEATURES = [
   {
     icon: "🌐",
     title: "Chain-portable by design",
-    desc: "EIP-712 signatures, EAS-compatible schema. Monad today, Solana next, any chain by design.",
+    desc: "Signed grants, portable evidence. Monad today, any chain by design.",
   },
 ];
 
@@ -57,7 +57,8 @@ export default function LandingPage() {
           style={{
             fontFamily: "var(--font-heading)",
             fontSize: " clamp(2.2rem, 5vw, 3.6rem)",
-            fontWeight: 800,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
             lineHeight: 1.1,
             color: "var(--vc-text-primary)",
             marginBottom: "1.25rem",
@@ -66,7 +67,7 @@ export default function LandingPage() {
           Open credit evidence for people{" "}
           <span
             style={{
-              background: "linear-gradient(135deg, #7C3AED, #38BDF8)",
+              background: "linear-gradient(135deg, var(--vc-violet), var(--vc-violet-dim))",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -112,7 +113,7 @@ export default function LandingPage() {
         style={{
           borderTop: "1px solid var(--vc-border)",
           borderBottom: "1px solid var(--vc-border)",
-          background: "var(--vc-surface)",
+          background: "var(--vc-surface-1)",
           padding: "2.5rem 2rem",
         }}
       >
@@ -131,8 +132,9 @@ export default function LandingPage() {
                 style={{
                   fontFamily: "var(--font-heading)",
                   fontSize: "2rem",
-                  fontWeight: 800,
-                  color: "#38BDF8",
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                  color: "var(--vc-violet-dim)",
                 }}
               >
                 {s.value}
@@ -151,7 +153,7 @@ export default function LandingPage() {
           style={{
             fontFamily: "var(--font-heading)",
             fontSize: "1.75rem",
-            fontWeight: 700,
+            fontWeight: 500,
             textAlign: "center",
             marginBottom: "3rem",
           }}

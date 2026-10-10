@@ -5,22 +5,22 @@ export default function HowItWorksPage() {
     {
       step: "01",
       title: "Payment Attestation",
-      desc: "The counterparty who actually witnessed a payment (gig platform, landlord, SACCO, or peer lender) signs a bonded commitment on Monad. Plaintext amounts stay encrypted off-chain.",
+      desc: "The counterparty who actually witnessed a payment (gig platform, landlord, SACCO, or peer lender) signs a bonded commitment on Monad. Amounts stay sealed in the commitment — never plaintext on-chain.",
     },
     {
       step: "02",
       title: "Subject-Controlled Consent",
-      desc: "You own your payment history. When applying for credit, you issue a scoped, time-limited EIP-712 consent grant releasing a decryption key to a named lender.",
+      desc: "You own your payment history. When applying for credit, you sign a scoped, time-limited EIP-712 grant letting a named lender see the values behind your sealed commitments.",
     },
     {
       step: "03",
       title: "Proof-Gated Underwriting",
-      desc: "The lender's smart contract re-verifies your commitment hashes and attester bonds client-side. Higher proof tiers (T1/T2/T3) unlock larger limits and lower interest rates.",
+      desc: "The lender re-verifies your commitment hashes client-side and records an underwriting score from that evidence. Higher proof tiers (T1/T2/T3) unlock larger limits.",
     },
     {
       step: "04",
-      title: "Automatic Repayment Waterfall",
-      desc: "Repayments are automatically routed from your recurring platform payouts before reaching your wallet, building your on-chain credit record for the next cycle.",
+      title: "Repay in Full, Grow the Record",
+      desc: "Repay your loan in full on-chain and the pool itself attests the repayment — a new sealed record that raises your future limit. Every cycle makes the evidence stronger.",
     },
   ];
 
@@ -30,7 +30,7 @@ export default function HowItWorksPage() {
         <span className="badge badge-tier2" style={{ fontSize: "0.8rem", marginBottom: "0.75rem" }}>
           End-to-End Workflow
         </span>
-        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2.25rem", fontWeight: 800 }}>
+        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2.25rem", fontWeight: 500, letterSpacing: "-0.01em" }}>
           How Vouchain Works
         </h1>
         <p style={{ color: "var(--vc-text-secondary)", fontSize: "1.05rem", marginTop: "0.5rem" }}>
@@ -45,9 +45,9 @@ export default function HowItWorksPage() {
               style={{
                 fontFamily: "var(--font-heading)",
                 fontSize: "1.5rem",
-                fontWeight: 800,
-                color: "#38BDF8",
-                background: "rgba(56, 189, 248, 0.1)",
+                fontWeight: 500,
+                color: "var(--vc-violet-dim)",
+                background: "var(--vc-success-dim)",
                 padding: "0.5rem 1rem",
                 borderRadius: "8px",
               }}

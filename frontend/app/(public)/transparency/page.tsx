@@ -12,7 +12,7 @@ export default function TransparencyPage() {
       label: "Proof-Gated Underwriting",
       status: "LIVE ON-CHAIN",
       color: "badge-active",
-      desc: "Recomputes commitment hashes and verifies attester bonds on-chain before originating loans.",
+      desc: "The pool records underwriting scores computed from attested evidence. Bond checks happen at attest time — only bonded attesters can write.",
     },
     {
       label: "Attestation Privacy",
@@ -27,10 +27,10 @@ export default function TransparencyPage() {
       desc: "ChallengeModule uses an owner-controlled arbiter function for demo purposes. Production target is a decentralized oracle network.",
     },
     {
-      label: "Demo Stablecoin",
-      status: "MOCK ERC20 ON MONAD TESTNET",
+      label: "Settlement Currency",
+      status: "NATIVE TESTNET MON",
       color: "badge-tier2",
-      desc: "Testnet MON and mock USDC used for loan origination and payout simulation.",
+      desc: "Loans, bonds, and repayments settle in native Monad testnet MON. No ERC20 is involved anywhere in the demo.",
     },
   ];
 
@@ -40,7 +40,7 @@ export default function TransparencyPage() {
         <span className="badge badge-active" style={{ fontSize: "0.8rem", marginBottom: "0.75rem" }}>
           Protocol Honesty & Verification
         </span>
-        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2.25rem", fontWeight: 800 }}>
+        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2.25rem", fontWeight: 500, letterSpacing: "-0.01em" }}>
           Transparency & Deployment Status
         </h1>
         <p style={{ color: "var(--vc-text-secondary)", fontSize: "1rem", marginTop: "0.5rem" }}>
@@ -72,7 +72,7 @@ export default function TransparencyPage() {
                 href={`https://testnet.monadscan.com/address/${addr}`}
                 target="_blank"
                 rel="noreferrer"
-                style={{ color: "#38BDF8", textDecoration: "underline" }}
+                style={{ color: "var(--vc-violet-dim)", textDecoration: "underline" }}
               >
                 {addr}
               </a>

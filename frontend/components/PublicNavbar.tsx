@@ -24,33 +24,32 @@ export function PublicNavbar() {
         borderBottom: "1px solid var(--vc-border)",
         position: "sticky",
         top: 0,
-        background: "rgba(10, 11, 15, 0.85)",
+        background: "rgba(255, 253, 247, 0.88)",
         backdropFilter: "blur(12px)",
         zIndex: 50,
       }}
     >
       <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: "linear-gradient(135deg, #7C3AED, #38BDF8)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1.2rem",
-            fontWeight: 700,
-            color: "#fff",
-            fontFamily: "var(--font-heading)",
-            boxShadow: "0 0 15px rgba(124, 58, 237, 0.4)",
-          }}
-        >
-          V
-        </div>
-        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1.25rem", color: "var(--vc-text-primary)" }}>
-          Vouchain
-        </span>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: "linear-gradient(135deg, #0E6B3E, #054F2E)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1.2rem",
+              fontWeight: 500,
+              color: "#FFFDF7",
+              fontFamily: "var(--font-heading)",
+            }}
+          >
+            V
+          </div>
+          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "1.25rem", color: "var(--vc-text-primary)" }}>
+            Vouchain
+          </span>
       </Link>
 
       <nav style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
@@ -61,7 +60,7 @@ export function PublicNavbar() {
             style={{
               fontSize: "0.9rem",
               fontWeight: 500,
-              color: pathname === item.href ? "#38BDF8" : "var(--vc-text-secondary)",
+              color: pathname === item.href ? "var(--vc-violet-dim)" : "var(--vc-text-secondary)",
               transition: "color 0.15s ease",
             }}
           >

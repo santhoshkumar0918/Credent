@@ -30,22 +30,21 @@ function LoginContent() {
             width: 48,
             height: 48,
             borderRadius: 12,
-            background: "linear-gradient(135deg, #7C3AED, #38BDF8)",
+            background: "linear-gradient(135deg, #0E6B3E, #054F2E)",
             margin: "0 auto 1.5rem",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: "1.4rem",
-            fontWeight: 700,
-            color: "#fff",
+            fontWeight: 500,
+            color: "#FFFDF7",
             fontFamily: "var(--font-heading)",
-            boxShadow: "0 0 25px rgba(124, 58, 237, 0.4)",
           }}
         >
           V
         </div>
 
-        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+        <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", fontWeight: 500, marginBottom: "0.5rem" }}>
           Sign in to Vouchain
         </h1>
         <p style={{ fontSize: "0.88rem", color: "var(--vc-text-secondary)", marginBottom: "2rem" }}>
