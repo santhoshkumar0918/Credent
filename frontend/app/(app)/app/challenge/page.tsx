@@ -30,7 +30,7 @@ export default function ChallengePage() {
   const [slashed, setSlashed] = useState(false);
   const [opening, setOpening] = useState(false);
   const [opened, setOpened] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("vouchain-admin-secret");
+  const [adminPassword, setAdminPassword] = useState("");
   const [showAdminModal, setShowAdminModal] = useState(false);
   const [resolutionTxHash, setResolutionTxHash] = useState("");
 

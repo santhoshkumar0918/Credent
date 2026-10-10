@@ -41,9 +41,18 @@ export function Providers({ children }: { children: ReactNode }) {
       })
   );
 
+  const rawAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+  const isRealAppId =
+    Boolean(rawAppId &&
+    (rawAppId.startsWith("cm") || rawAppId.startsWith("cl")) &&
+    !rawAppId.includes("your_") &&
+    !rawAppId.includes("placeholder"));
+
+  const appId = isRealAppId ? (rawAppId as string) : "cltest1234567890123456789";
+
   return (
     <PrivyProvider
-      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || "cm12345678901234567890123"}
+      appId={appId}
       config={PRIVY_CONFIG}
     >
       <WagmiProvider config={config}>
