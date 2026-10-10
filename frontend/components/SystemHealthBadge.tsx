@@ -13,6 +13,7 @@ interface HealthData {
 
 export function SystemHealthBadge() {
   const [health, setHealth] = useState<HealthData | null>(null);
+  const [unknown, setUnknown] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,19 +21,12 @@ export function SystemHealthBadge() {
       try {
         const data = await fetchSystemHealth();
         setHealth(data);
+        setUnknown(false);
       } catch {
-        // Fallback default
-        setHealth({
-          status: "ok",
-          chain: "Monad Testnet (Chain ID 10143)",
-          latestBlock: "6894012",
-          indexerLagBlocks: 0,
-          services: {
-            api: { status: "online", latencyMs: 12 },
-            agents: { status: "online", latencyMs: 18 },
-            indexer: { status: "online", latencyMs: 25 },
-          },
-        });
+        // Honest unknown: the API is unreachable, so any "healthy"
+        // payload would be fabricated. Show that instead.
+        setHealth(null);
+        setUnknown(true);
       } finally {
         setLoading(false);
       }
@@ -43,11 +37,27 @@ export function SystemHealthBadge() {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading || !health) {
+  if (loading) {
     return (
-      <div className="flex items-center gap-2 text-xs text-slate-400">
-        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        <span>Checking system health...</span>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.75rem", color: "var(--vc-text-muted)" }}>
+        <span className="live-dot" />
+        <span>Checking system health…</span>
+      </div>
+    );
+  }
+
+  if (unknown || !health) {
+    return (
+      <div
+        style={{
+          display: "inline-flex", alignItems: "center", gap: "0.6rem",
+          padding: "0.35rem 0.75rem", borderRadius: "999px",
+          background: "var(--vc-surface-2)", border: "1px solid var(--vc-border-strong)",
+          fontSize: "0.75rem", fontFamily: "var(--font-mono)",
+        }}
+      >
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--vc-text-muted)" }} />
+        <span style={{ color: "var(--vc-text-secondary)", fontWeight: 600 }}>API unreachable — status unknown</span>
       </div>
     );
   }
@@ -62,8 +72,8 @@ export function SystemHealthBadge() {
         gap: "0.6rem",
         padding: "0.35rem 0.75rem",
         borderRadius: "999px",
-        background: allOnline ? "rgba(16, 185, 129, 0.1)" : "rgba(245, 158, 11, 0.1)",
-        border: `1px solid ${allOnline ? "rgba(16, 185, 129, 0.25)" : "rgba(245, 158, 11, 0.25)"}`,
+        background: allOnline ? "var(--vc-success-dim)" : "var(--vc-warning-dim)",
+        border: "1px solid var(--vc-border-strong)",
         fontSize: "0.75rem",
         fontFamily: "var(--font-mono)",
       }}
@@ -73,11 +83,10 @@ export function SystemHealthBadge() {
           width: 8,
           height: 8,
           borderRadius: "50%",
-          background: allOnline ? "#10B981" : "#F59E0B",
-          boxShadow: `0 0 8px ${allOnline ? "#10B981" : "#F59E0B"}`,
+          background: allOnline ? "var(--vc-success)" : "var(--vc-warning)",
         }}
       />
-      <span style={{ color: allOnline ? "#10B981" : "#F59E0B", fontWeight: 600 }}>
+      <span style={{ color: allOnline ? "var(--vc-success)" : "var(--vc-warning)", fontWeight: 600 }}>
         {allOnline ? "All Systems Operational" : "Degraded Service"}
       </span>
       <span style={{ color: "var(--vc-text-muted)" }}>• Block #{health.latestBlock}</span>
