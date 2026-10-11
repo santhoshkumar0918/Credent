@@ -190,17 +190,26 @@ export async function syncOnce(config: SubscriberConfig): Promise<bigint> {
   const head = await client.getBlockNumber();
   const safe = head - CONFIRMATIONS;
   let cursor = await getCursor(config.pool, START_BLOCK);
-  if (cursor < 69775850n) {
+  // Replay controls (default = live-tail behaviour). INDEXER_START_BLOCK
+  // forces a rewind for one-shot catch-up; INDEXER_MAX_BATCHES raises the
+  // per-pass batch cap so a backfill actually completes in one run.
+  const forcedStart = process.env["INDEXER_START_BLOCK"];
+  const maxBatches = BigInt(process.env["INDEXER_MAX_BATCHES"] ?? "5");
+  const skipThreshold = BigInt(process.env["INDEXER_SKIP_THRESHOLD"] ?? "500");
+  if (forcedStart && cursor !== BigInt(forcedStart)) {
+    cursor = BigInt(forcedStart);
+    await setCursor(config.pool, cursor);
+  } else if (cursor < 69775850n) {
     cursor = 69775850n;
     await setCursor(config.pool, cursor);
-  } else if (safe - cursor > 500n) {
+  } else if (safe - cursor > skipThreshold) {
     cursor = safe - 100n;
     await setCursor(config.pool, cursor);
   }
   let ingested = 0n;
   const blockTimes = new Map<bigint, Date>(); // cleared per syncOnce call
-  let batchCount = 0;
-  while (cursor <= safe && batchCount < 5) {
+  let batchCount = 0n;
+  while (cursor <= safe && batchCount < maxBatches) {
     batchCount++;
     const to = cursor + RANGE - 1n <= safe ? cursor + RANGE - 1n : safe;
     for (const contract of CONTRACTS) {
