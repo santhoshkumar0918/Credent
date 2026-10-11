@@ -88,7 +88,7 @@ export default function LandingPage() {
           Rent, gig payouts, and informal loan repayments verified by the counterparty who was actually there. You own your evidence. Any lender can underwrite on facts instead of collateral.
         </p>
 
-        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "1rem", justifyContent: "center", alignItems: "center", flexWrap: "wrap" }}>
           {authenticated ? (
             <Link href="/app/home" className="btn btn-primary btn-lg" style={{ fontSize: "1rem", padding: "0.85rem 2rem" }}>
               Open Dashboard →

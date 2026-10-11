@@ -50,8 +50,8 @@ export default function TransparencyPage() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "3rem" }}>
         {declarations.map((d) => (
-          <div key={d.label} className="card" style={{ padding: "1.75rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <div key={d.label} className="card" style={{ padding: "1.75rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.6rem", marginBottom: "0.75rem" }}>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700 }}>{d.label}</h2>
               <span className={`badge ${d.color}`} style={{ fontSize: "0.7rem" }}>
                 {d.status}

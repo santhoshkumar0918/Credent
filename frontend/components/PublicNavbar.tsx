@@ -16,6 +16,7 @@ export function PublicNavbar() {
 
   return (
     <header
+      className="public-nav"
       style={{
         padding: "1.25rem 2rem",
         display: "flex",
@@ -52,7 +53,7 @@ export function PublicNavbar() {
           </span>
       </Link>
 
-      <nav style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+      <nav className="public-nav-links" style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
         {links.map((item) => (
           <Link
             key={item.href}

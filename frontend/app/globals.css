@@ -663,6 +663,10 @@ input::placeholder, textarea::placeholder { color: var(--vc-text-muted); }
   .page-header { padding: 1.25rem 1rem 0; }
   .page-body { padding: 0 1rem 1.5rem; }
   .stat-value { font-size: 1.4rem; }
+  /* Public navbar: links collapse into the footer on phones */
+  .public-nav { padding: 0.85rem 1rem !important; }
+  .public-nav-links { display: none !important; }
+  .public-nav .btn { padding: 0.5rem 1.1rem; font-size: 0.82rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

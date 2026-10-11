@@ -139,7 +139,7 @@ function ExplorerInner() {
         never the amount. Amounts are revealed only under the subject's consent.
       </p>
 
-      <form onSubmit={lookup} style={{ display: "flex", gap: "0.6rem", marginTop: "1.5rem" }}>
+      <form onSubmit={lookup} style={{ display: "flex", gap: "0.6rem", marginTop: "1.5rem", flexWrap: "wrap" }}>
         <input
           className="input-field mono"
           value={query}
@@ -147,7 +147,7 @@ function ExplorerInner() {
           placeholder="Attestation id, e.g. 0"
           inputMode="numeric"
           aria-label="Attestation id"
-          style={{ flex: 1 }}
+          style={{ flex: "1 1 200px" }}
         />
         <button type="submit" className="btn btn-primary" disabled={loading}>
           {loading ? "Reading chain…" : "Look up"}
