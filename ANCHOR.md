@@ -123,38 +123,8 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-Frontend rewire Phase 2 BORROWER LOOP DONE (local commits, NOT pushed):
-consent grants sign EIP-712 (DEPLOYED pre-nonce struct) + relay-then-direct
-submit (`f9b6977`, seam `frontend/lib/consent.ts`); sealed live record +
-on-chain grant checks + real revoke (`5225152`); live underwriting reads +
-real repay with attestation-id receipt (`f6a735a`, `frontend/lib/pool.ts`);
-slim live home (`a354837`). Phase 3 ATTESTER DONE: live bond/reputation/
-active reads + register/top-up writes + real attest() with preimage receipt
-+ newest-first chain history (`2109748`, `frontend/lib/attester.ts`;
-`/explorer?id=` deep links). Phase 4 LENDER DONE: client-side disclosure
-re-verification naming failed checks + id-gap completeness vs enumeration +
-verified-set underwriting writes + pool book + indexer attester mirror
-(`6d3f11c`, `frontend/lib/lender.ts`). Phase 5 DISPUTES + POOL DONE: live
-challenge list from ChallengeModule + real 0.5 MON openChallenge (grant/
-window/bond errors translated) + winner claims + red-team honesty card, no
-fake admin-resolve modal (`a9c02ba`, `frontend/lib/dispute.ts`); pool
-stripped to fund/underwrite/originate/repay with live balance + real fund()
-(`a9c02ba`). Phase 6 POLISH DONE: light-theme public site + honest copy (no
-waterfall/ERC20/decryption-key claims), activity-from-grants feed,
-settings/health unknown-states, responsive grids, e2e rewritten 7/7 green,
-mock-data.ts DELETED (`eaffdeb`, `c8c7d37`, `1082843`, `5ea9496`).
-Layout-bug fix (`3883cb2`): /explorer lived OUTSIDE the (public) group so
-the navbar/footer never rendered — moved into the group; added the missing
-logo (killed a 404) + a live latest-on-chain list so the page is never
-blank; lender verify tab gained a sticky explainer rail for wide screens.
-Screenshot-verified crisp (earlier paleness was mid-animation capture).
-Sidebar "clipping" in the report is an external overlay widget, not the app.
-Mobile padding pass (`d7b6500`, screenshot-verified at 390px): public
-navbar collapses to logo + compact CTA, hero buttons wrap, transparency
-headers wrap, explorer form wraps, onboarding breathing room. Desktop
-re-verified clean at 1440px.
-REWIRE COMPLETE — every screen live or honestly empty; zero mock
-fallbacks in the app.
+(none — frontend rewire + layout normalization complete; all commits local,
+NOT pushed)
 
 MATE-BACKEND DEFECTS (pre-existing, verified with each workspace's pinned
 tsc — NOT touched, owned by their tracks):
@@ -183,6 +153,12 @@ CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale)
   documented here, not in the contract.
 
 ## Last completed
+- **Frontend UI/UX rewire COMPLETE (Phases 0–6, local commits `83ab67a`…`bc05cf1`, NOT pushed)**:
+  - Sunlit Ledger light theme (beige canvas + forest green, Newsreader/Inter/JetBrains Mono); nav seam `frontend/lib/nav.tsx`; real `/explorer` in the (public) group with `?id=` deep links + live recent list; honest 4-step onboarding; signing seam `frontend/lib/wallet.ts` (embedded EIP-1193 + EIP-712).
+  - All mock data removed (`mock-data.ts` deleted). Every screen live-or-honestly-empty: consent EIP-712 grants (deployed pre-nonce struct, relayer-first then direct), sealed record + revoke, live attester bond/attest/history, lender verify→underwrite with named failed checks, live challenges (open/claim, no fake admin-resolve), live pool fund/underwrite/originate/repay, browser-local activity feed, honest settings/health.
+  - e2e rewritten → 7/7 green (playwright chromium). `frontend/.env.local` has Privy app id + RPC + API URL (gitignored); email OTP login confirmed working by user.
+  - Mobile padding pass on public pages (`d7b6500`, `bc05cf1`); explorer layout fix (`3883cb2`) — was outside the (public) group so navbar/footer never rendered.
+- **App layout normalization (`b1281c3`, screenshot-verified 1440px + 390px via built-CSS fixtures)**: all ten `/app/*` screens unified under one `.page-shell` wrapper (max-width 1180px, centered, 2rem padding / 1rem phones). Root cause of the reported flush-left/dead-gutter: `.main-content` had no padding and notifications/settings skipped `.page-header`/`.page-body` entirely. Header/body are now spacing-only hooks inside the shell; ad-hoc inline stat grids replaced with shared `.stat-grid` (auto-fit minmax(160px,1fr)). Signed-in visual re-check still owed by user on a funded session (AuthGate blocks fixture-free screenshots).
 - **Environment & Secret Hygiene**:
   - `ADMIN_PASSWORD` rotated to env-only random secret. Removed hardcoded `vouchain-admin-secret` from `apps/api/src/routes/demo.ts` and `frontend/app/(app)/app/challenge/page.tsx`.
   - `/app/settings` system wallet balances panel gated behind `process.env.NEXT_PUBLIC_DEMO_MODE !== "false"`.
