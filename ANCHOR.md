@@ -149,6 +149,10 @@ logo (killed a 404) + a live latest-on-chain list so the page is never
 blank; lender verify tab gained a sticky explainer rail for wide screens.
 Screenshot-verified crisp (earlier paleness was mid-animation capture).
 Sidebar "clipping" in the report is an external overlay widget, not the app.
+Mobile padding pass (`d7b6500`, screenshot-verified at 390px): public
+navbar collapses to logo + compact CTA, hero buttons wrap, transparency
+headers wrap, explorer form wraps, onboarding breathing room. Desktop
+re-verified clean at 1440px.
 REWIRE COMPLETE — every screen live or honestly empty; zero mock
 fallbacks in the app.
 
