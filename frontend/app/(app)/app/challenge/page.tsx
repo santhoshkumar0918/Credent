@@ -119,7 +119,7 @@ export default function ChallengePage() {
     d.status === 2 && !d.claimed && address && d.challenger.toLowerCase() === address.toLowerCase();
 
   return (
-    <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+    <div className="fade-in page-shell">
       <div className="page-header">
         <p className="eyebrow" style={{ marginBottom: "0.4rem" }}>Watcher · Disputes</p>
         <h1 style={{ fontSize: "1.8rem", marginBottom: "0.35rem" }}>Fraud & challenge console</h1>
@@ -131,7 +131,7 @@ export default function ChallengePage() {
       <div className="page-body" style={{ display: "grid", gap: "1.5rem", maxWidth: 720 }}>
         {/* How it works */}
         <div className="card">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "0.9rem", fontSize: "0.83rem" }}>
+          <div className="stat-grid" style={{ fontSize: "0.83rem" }}>
             {[
               ["1 · Standing", "The subject must have granted YOUR wallet a live disclosure. No grant, no challenge."],
               ["2 · Bond", `${CHALLENGER_BOND_MON} MON locked with the challenge. Win it back with the slash, or lose it.`],

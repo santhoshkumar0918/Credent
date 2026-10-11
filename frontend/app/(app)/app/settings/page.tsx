@@ -34,8 +34,8 @@ export default function SettingsPage() {
   const identity = user?.email?.address ?? user?.phone?.number ?? "Verified account";
 
   return (
-    <div style={{ maxWidth: 740, display: "flex", flexDirection: "column", gap: "1.75rem" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+    <div className="fade-in page-shell">
+      <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
         <div>
           <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "1.6rem", fontWeight: 700 }}>
             Account & System Settings
@@ -47,7 +47,8 @@ export default function SettingsPage() {
         <SystemHealthBadge />
       </div>
 
-      <div className="card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div className="page-body" style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: 740 }}>
+        <div className="card" style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
         <h2 style={{ fontSize: "1.1rem", fontWeight: 600 }}>Profile Identity</h2>
 
         <div style={{ display: "flex", justifyContent: "space-between", padding: "0.75rem 0", borderBottom: "1px solid var(--vc-border)" }}>
@@ -113,6 +114,7 @@ export default function SettingsPage() {
         >
           Sign Out of Vouchain
         </button>
+      </div>
       </div>
     </div>
   );

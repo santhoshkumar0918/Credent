@@ -61,7 +61,7 @@ export default function PoolPage() {
   const repaid = book && book !== null ? book.loans.filter((l) => l.repaid).length : null;
 
   return (
-    <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+    <div className="fade-in page-shell">
       <div className="page-header">
         <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", marginBottom: "0.4rem" }}>
           <p className="eyebrow">Lender · Pool</p>
@@ -80,7 +80,7 @@ export default function PoolPage() {
             <button className="btn btn-ghost btn-sm" onClick={refresh}>Refresh</button>
           </div>
           {book === undefined ? (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
+            <div className="stat-grid">
               <div className="skeleton" style={{ height: 56 }} />
               <div className="skeleton" style={{ height: 56 }} />
               <div className="skeleton" style={{ height: 56 }} />
@@ -88,7 +88,7 @@ export default function PoolPage() {
           ) : book === null ? (
             <p style={{ fontSize: "0.88rem", color: "var(--vc-warning)" }}>Pool unreadable — RPC may be down. Retry.</p>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
+            <div className="stat-grid">
               <div className="stat-card">
                 <div className="stat-value" style={{ fontSize: "1.4rem" }}>{fmtMON(book.balance)} MON</div>
                 <div className="stat-label">Pool balance</div>

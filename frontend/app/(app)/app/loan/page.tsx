@@ -85,7 +85,7 @@ export default function LoanPage() {
     : null;
 
   return (
-    <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+    <div className="fade-in page-shell">
       <div className="page-header">
         <p className="eyebrow" style={{ marginBottom: "0.4rem" }}>Borrower · Loan</p>
         <h1 style={{ fontSize: "1.8rem", marginBottom: "0.35rem" }}>My Loan & Underwriting</h1>

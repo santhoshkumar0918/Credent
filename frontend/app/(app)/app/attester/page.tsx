@@ -200,7 +200,7 @@ export default function AttesterPage() {
   }
 
   return (
-    <div className="fade-in">
+    <div className="fade-in page-shell">
       <div className="page-header">
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
           <div>

@@ -183,7 +183,7 @@ export default function LenderPage() {
   }
 
   return (
-    <div className="fade-in">
+    <div className="fade-in page-shell">
       <div className="page-header">
         <p className="eyebrow" style={{ marginBottom: "0.4rem" }}>Lender · Console</p>
         <h1 style={{ fontSize: "1.8rem", marginBottom: "0.35rem" }}>Underwriting console</h1>

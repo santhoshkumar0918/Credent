@@ -285,6 +285,13 @@ input::placeholder, textarea::placeholder { color: var(--vc-text-muted); }
   .grid-2 { grid-template-columns: 1fr; }
 }
 
+/* Stat row — auto-fits evenly, wraps before a label squeezes under 160px */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
 /* Verify layout — form column + sticky explainer rail on wide screens */
 .verify-layout {
   display: grid;
@@ -460,11 +467,22 @@ input::placeholder, textarea::placeholder { color: var(--vc-text-muted); }
   padding: 0.75rem 0.75rem 0.35rem;
 }
 .main-content { flex: 1; overflow-y: auto; min-width: 0; }
-.page-header {
-  padding: 2rem 2rem 0;
-  margin-bottom: 1.5rem;
+/* Single content wrapper for every /app screen — one max-width + padding
+   strategy so columns align identically across pages (and never sit flush
+   against the sidebar). */
+.page-shell {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-sizing: border-box;
 }
-.page-body { padding: 0 2rem 2rem; }
+/* Semantic hooks inside the shell — spacing comes from .page-shell gap. */
+.page-header { min-width: 0; }
+.page-body { min-width: 0; }
 
 /* Mobile bottom nav */
 .mobile-nav {
@@ -660,8 +678,7 @@ input::placeholder, textarea::placeholder { color: var(--vc-text-muted); }
   .sidebar { display: none; }
   .mobile-nav { display: block; }
   .main-content { padding-bottom: 76px; }
-  .page-header { padding: 1.25rem 1rem 0; }
-  .page-body { padding: 0 1rem 1.5rem; }
+  .page-shell { padding: 1.25rem 1rem 1.5rem; }
   .stat-value { font-size: 1.4rem; }
   /* Public navbar: links collapse into the footer on phones */
   .public-nav { padding: 0.85rem 1rem !important; }

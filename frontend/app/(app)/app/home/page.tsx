@@ -52,7 +52,7 @@ export default function HomePage() {
   }, [address]);
 
   return (
-    <div className="fade-in">
+    <div className="fade-in page-shell">
       <div className="page-header">
         <p className="eyebrow" style={{ marginBottom: "0.4rem" }}>{ROLE_LABELS[role] ?? "Borrower"} · Home</p>
         <h1 className="serif" style={{ fontSize: "clamp(1.9rem, 3.5vw, 2.6rem)", fontWeight: 400, maxWidth: 560 }}>

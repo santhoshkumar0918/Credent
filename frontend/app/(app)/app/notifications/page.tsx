@@ -44,8 +44,8 @@ export default function NotificationsPage() {
   }, [address]);
 
   return (
-    <div className="fade-in" style={{ maxWidth: 750, display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      <div>
+    <div className="fade-in page-shell">
+      <div className="page-header">
         <p className="eyebrow" style={{ marginBottom: "0.4rem" }}>Borrower · Activity</p>
         <h1 className="serif" style={{ fontSize: "1.8rem", marginBottom: "0.35rem" }}>Your activity</h1>
         <p style={{ color: "var(--vc-text-secondary)", fontSize: "0.9rem" }}>
@@ -53,6 +53,7 @@ export default function NotificationsPage() {
         </p>
       </div>
 
+      <div className="page-body" style={{ maxWidth: 750 }}>
       {items === null ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
           <div className="skeleton" style={{ height: 72 }} />
@@ -87,6 +88,7 @@ export default function NotificationsPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

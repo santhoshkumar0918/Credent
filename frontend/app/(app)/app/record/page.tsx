@@ -163,7 +163,7 @@ export default function MyRecordPage() {
   const disputed = attestations?.filter((a) => a.status !== "ACTIVE").length ?? 0;
 
   return (
-    <div className="fade-in">
+    <div className="fade-in page-shell">
       <div className="page-header">
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
           <div>

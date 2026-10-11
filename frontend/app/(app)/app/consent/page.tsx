@@ -152,7 +152,7 @@ export default function ConsentPage() {
 
   if (tx === "done" && txHash) {
     return (
-      <div className="fade-in">
+      <div className="fade-in page-shell">
         <div className="page-header">
           <p className="eyebrow" style={{ marginBottom: "0.4rem" }}>Sharing · Consent</p>
           <h1 style={{ fontSize: "1.8rem" }}>Consent granted</h1>
@@ -189,7 +189,7 @@ export default function ConsentPage() {
   }
 
   return (
-    <div className="fade-in">
+    <div className="fade-in page-shell">
       <div className="page-header">
         <p className="eyebrow" style={{ marginBottom: "0.4rem" }}>Sharing · Consent</p>
         <h1 style={{ fontSize: "1.8rem", marginBottom: "0.35rem" }}>Grant consent</h1>
