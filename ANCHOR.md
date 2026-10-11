@@ -123,8 +123,27 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-(none — frontend rewire + layout normalization complete; all commits local,
-NOT pushed)
+(none — frontend rewire + layout normalization + local backend stack all
+up; pushed to origin/main)
+
+LOCAL TEST STACK (brought up 2026-10-11, all verified live):
+- Frontend :3000 (`next dev`), Fastify API :3001 (`bun --watch`), CreditAggregator
+  :3111 (`bun run start` in indexer/), Redis :6379, Postgres :5432 with role+db
+  `credent`/`credent` (schema applied from indexer/schema.sql).
+- Attester rows seeded to satisfy the attestations FK (registration events predate
+  the sync cursor): platform 0xDCBd… (PLATFORM, 5 MON, active) + pool 0xf2e7…
+  (LENDER, 5 MON, inactive-on-chain). Attestation #1 (GIG_PAYOUT, block 69775867)
+  replayed into Postgres; cursor tailing near head.
+- `apps/api/.env` created (gitignored) — its default DATABASE_URL pointed at a
+  nonexistent `vouchain` DB and every query silently returned empty arrays.
+  Now points at the credent DB; `/api/subjects/:pseudo/attestations` returns
+  real attestation #1.
+- Indexer replay controls (`ce602a2`): INDEXER_START_BLOCK / INDEXER_MAX_BATCHES /
+  INDEXER_SKIP_THRESHOLD env vars; defaults = old live-tail behaviour.
+- KNOWN SCHEMA QUIRK (not blocking): `attesters.reputation_score INTEGER` overflows
+  on the on-chain uint sentinel (~1.15e77) — seeded/clamped to 0; real scores are
+  small. Should be NUMERIC(78,0) in a future schema pass.
+- e2e 7/7 green against the running stack; all public routes 200.
 
 MATE-BACKEND DEFECTS (pre-existing, verified with each workspace's pinned
 tsc — NOT touched, owned by their tracks):
@@ -153,7 +172,7 @@ CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale)
   documented here, not in the contract.
 
 ## Last completed
-- **Frontend UI/UX rewire COMPLETE (Phases 0–6, local commits `83ab67a`…`bc05cf1`, NOT pushed)**:
+- **Frontend UI/UX rewire COMPLETE (Phases 0–6, commits `83ab67a`…`bc05cf1`, pushed)**:
   - Sunlit Ledger light theme (beige canvas + forest green, Newsreader/Inter/JetBrains Mono); nav seam `frontend/lib/nav.tsx`; real `/explorer` in the (public) group with `?id=` deep links + live recent list; honest 4-step onboarding; signing seam `frontend/lib/wallet.ts` (embedded EIP-1193 + EIP-712).
   - All mock data removed (`mock-data.ts` deleted). Every screen live-or-honestly-empty: consent EIP-712 grants (deployed pre-nonce struct, relayer-first then direct), sealed record + revoke, live attester bond/attest/history, lender verify→underwrite with named failed checks, live challenges (open/claim, no fake admin-resolve), live pool fund/underwrite/originate/repay, browser-local activity feed, honest settings/health.
   - e2e rewritten → 7/7 green (playwright chromium). `frontend/.env.local` has Privy app id + RPC + API URL (gitignored); email OTP login confirmed working by user.
