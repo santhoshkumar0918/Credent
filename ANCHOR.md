@@ -123,8 +123,27 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-(none — frontend rewire + layout normalization + local backend stack all
-up; pushed to origin/main)
+Live solo test + queued fixes; pushing current work now, fixes on hold until
+user sends the step-by-step fix list.
+
+- User live progress: registered `0xA0d3…4d7F` as INDIVIDUAL attester; wrote
+  attestation #2 (demo-subject pair) and self-attestation #3 (`you × you`,
+  GIG_PAYOUT, block 70433013, ACTIVE); My Record now shows #3 after the
+  solo-test fix below.
+- Found during consent test: relayer returned mock tx
+  `0xf773…df774` for the grant; MonadScan says not found;
+  `hasValidGrant=false`, GIG `isAuthorized=false` on both candidate pairs.
+  Backend log proves `AbiEncodingLengthMismatchError` (relayer expects 5
+  grant fields, frontend sends 6) and then returns a random hash. Fix queued:
+  correct relayer ABI + remove mock-hash fallback.
+- User-reported backlog, not started: rename visible `Vouchain` product text
+  to `Credent`; role-switch keeps old main content while sidebar updates.
+
+## Next task
+1. Apply the user’s forthcoming step-by-step fix list (relayer first unless
+   they reorder it).
+2. Rehearse the live accountability climax: Plant False Claim in platform-sim -> Watcher scans & opens on-chain challenge on `ChallengeModule` -> Arbiter calls `resolve(challengeId, true)` -> Slashes bond and updates reputation.
+3. Demo video walkthrough rehearsal following PRD section 15 script.
 
 LOCAL TEST STACK (brought up 2026-10-11, all verified live):
 - Frontend :3000 (`next dev`), Fastify API :3001 (`bun --watch`), CreditAggregator
@@ -172,6 +191,11 @@ CHAIN TRUTH (probed 2026-10-10 via cast — do not re-derive, re-probe if stale)
   documented here, not in the contract.
 
 ## Last completed
+- **Solo-test record/consent pairing (local, now pushing)**: attester form has
+  `Log to my own record` toggle; My Record queries/merges `you × platform`
+  and `you × you` pseudonyms; consent discovers the attester pair holding the
+  user’s attestations before signing. Verified live: self-attestation #3
+  appears in My Record; consent grant still blocked by the relayer defect above.
 - **Frontend UI/UX rewire COMPLETE (Phases 0–6, commits `83ab67a`…`bc05cf1`, pushed)**:
   - Sunlit Ledger light theme (beige canvas + forest green, Newsreader/Inter/JetBrains Mono); nav seam `frontend/lib/nav.tsx`; real `/explorer` in the (public) group with `?id=` deep links + live recent list; honest 4-step onboarding; signing seam `frontend/lib/wallet.ts` (embedded EIP-1193 + EIP-712).
   - All mock data removed (`mock-data.ts` deleted). Every screen live-or-honestly-empty: consent EIP-712 grants (deployed pre-nonce struct, relayer-first then direct), sealed record + revoke, live attester bond/attest/history, lender verify→underwrite with named failed checks, live challenges (open/claim, no fake admin-resolve), live pool fund/underwrite/originate/repay, browser-local activity feed, honest settings/health.
