@@ -123,8 +123,26 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-Live solo test + queued fixes; pushing current work now, fixes on hold until
-user sends the step-by-step fix list.
+Live solo test + fix-pack verification; code for all three queued fixes is
+done locally, real-grant + signed-in role-transition checks still owed by the
+live session.
+
+- Relayer fix implemented (`apps/api/src/relayer/gas-relayer.ts`): canonical
+  deployed ConsentRegistry ABI from `shared/`, target restricted to the
+  deployed registry, waits for the transaction receipt, and throws honest
+  errors instead of returning mock hashes. Dummy-signature probe now returns
+  `400 Relayer broadcast failed: The contract function "grantAccess" reverted`
+  (encoding reaches the contract; no fake hash). Real-grant verification
+  pending user retry.
+- Credent rename implemented: user-visible `Vouchain` copy → `Credent`
+  (frontend brand/nav/auth/onboarding/settings/metadata/e2e, API + agents
+  health/service strings, notifier copy, platform-sim metadata). `VouchainConsent`
+  EIP-712 domain, contract identifiers, storage keys, and CSS vars unchanged
+  by design. Frontend build + e2e 7/7 green.
+- Role-switch routing implemented (`ROLE_HOME` + `roleHasRoute` in
+  `frontend/lib/nav.tsx`; `Sidebar` navigates on role change, role-aware logo
+  link). Logic unit-checked; signed-in manual check of all four transitions
+  still owed.
 
 - User live progress: registered `0xA0d3…4d7F` as INDIVIDUAL attester; wrote
   attestation #2 (demo-subject pair) and self-attestation #3 (`you × you`,
