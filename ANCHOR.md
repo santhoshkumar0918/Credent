@@ -123,9 +123,16 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-Live solo test + fix-pack verification; code for all three queued fixes is
-done locally, real-grant + signed-in role-transition checks still owed by the
-live session.
+Live solo test continuing; all three fix-pack tickets verified and closed.
+
+- Grant VERIFIED live: tx `0x8d16b08cfcc61ab0d5d72ba395f22b7e379804572ff45a2cbffcc8c04460444b`
+  (direct wallet write, Status Success, AccessGranted for `you × you` pair).
+  `hasValidGrant=true`, GIG `isAuthorized=true` on self pair; platform pair
+  correctly false. The earlier mock tx `0xf773…df774` is discarded, never was on-chain.
+- Rename VERIFIED live (login/how-it-works serve “Credent”, API health says
+  “Credent API”, e2e 7/7). `VouchainConsent` EIP-712 domain untouched by design.
+- Role-switch routing VERIFIED by user: main panel now follows the sidebar.
+- User attestations on-chain: #2 (demo-subject pair), #3 (self pair, in My Record).
 
 - Relayer fix implemented (`apps/api/src/relayer/gas-relayer.ts`): canonical
   deployed ConsentRegistry ABI from `shared/`, target restricted to the
