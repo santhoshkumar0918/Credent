@@ -58,6 +58,7 @@ export default function AttesterPage() {
 
   // Log form
   const [subject, setSubject] = useState("");
+  const [selfAttest, setSelfAttest] = useState(false);
   const [eventType, setEventType] = useState<EventType>("GIG_PAYOUT");
   const [amount, setAmount] = useState("");
   const [outcome, setOutcome] = useState<OutcomeKey>("ON_TIME");
@@ -93,8 +94,9 @@ export default function AttesterPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const subjectOk = isAddress(subject);
-  const derived = subjectOk && address ? pseudonymFor(subject.trim() as Hex, address) : null;
+  const effectiveSubject = selfAttest ? (address ?? "") : subject;
+  const subjectOk = selfAttest ? !!address : isAddress(subject);
+  const derived = subjectOk && address ? pseudonymFor(effectiveSubject.trim() as Hex, address) : null;
 
   async function withClient<T>(fn: (wc: Awaited<ReturnType<typeof getEmbeddedWalletClient>>) => Promise<T>) {
     if (!wallet) throw new Error("Wallet not ready.");
@@ -265,9 +267,24 @@ export default function AttesterPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div>
                   <label className="input-label" htmlFor="attester-subject-input">Subject wallet address</label>
+                  <button
+                    id="attester-self-toggle"
+                    onClick={() => { setSelfAttest((v) => !v); }}
+                    className={`btn btn-sm ${selfAttest ? "btn-primary" : "btn-outline"}`}
+                    style={{ marginBottom: "0.6rem", display: "block" }}
+                  >
+                    {selfAttest ? "✓ Logging to MY record — click to attest for someone else" : "Log to my own record (solo test)"}
+                  </button>
                   <input id="attester-subject-input" className="input-field mono" placeholder="0x… the worker you paid"
-                    value={subject} onChange={(e) => setSubject(e.target.value)} style={{ fontSize: "0.82rem" }} />
-                  {subject && !subjectOk && (
+                    value={effectiveSubject} onChange={(e) => setSubject(e.target.value)}
+                    disabled={selfAttest}
+                    style={{ fontSize: "0.82rem", opacity: selfAttest ? 0.6 : 1 }} />
+                  {selfAttest && (
+                    <p style={{ fontSize: "0.75rem", color: "var(--vc-text-secondary)", marginTop: "0.35rem" }}>
+                      Attesting to your own wallet — this fills <em>My Record</em> so you can test the borrower loop solo.
+                    </p>
+                  )}
+                  {!selfAttest && subject && !subjectOk && (
                     <p style={{ fontSize: "0.78rem", color: "var(--vc-danger)", marginTop: "0.35rem" }}>0x + 40 hex chars.</p>
                   )}
                   {derived && (

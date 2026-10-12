@@ -6,10 +6,11 @@
 // No disclosure plaintext is invented here: amounts live with the
 // attester platform, which posts envelopes after this grant lands.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { pseudonymFor } from "@shared/commitments";
 import { useSignTypedData, useEmbeddedWallet, getEmbeddedWalletClient } from "@/lib/wallet";
+import { apiFetch } from "@/lib/api-client";
 import {
   consentDomain,
   grantTypes,
@@ -76,7 +77,31 @@ export default function ConsentPage() {
       ? DEMO_LENDER.name
       : "Viewer";
 
-  const subjectPseudonym = address ? pseudonymFor(address, PLATFORM_ATTESTER) : null;
+  // A borrower's record can be attested under the platform OR under their own
+  // bonded attester wallet (solo-testing). Discover which key actually holds
+  // attestations and use that pair for the grant — a grant for the wrong
+  // attester is useless to the lender.
+  const [activeAttester, setActiveAttester] = useState<Address>(PLATFORM_ATTESTER);
+  const subjectPseudonym = address ? pseudonymFor(address, activeAttester) : null;
+
+  useEffect(() => {
+    if (!address) return;
+    let cancelled = false;
+    (async () => {
+      const candidates: Address[] = [PLATFORM_ATTESTER, address];
+      for (const attester of candidates) {
+        try {
+          const p = pseudonymFor(address, attester);
+          const res = await apiFetch<{ attestations: { id: number }[] }>(
+            `/api/subjects/${p}/attestations`,
+          );
+          if (cancelled) return;
+          if ((res.attestations?.length ?? 0) > 0) { setActiveAttester(attester); return; }
+        } catch { /* try next candidate */ }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [address]);
 
   function toggleType(tag: string) {
     setSelectedTypes((prev) =>
@@ -93,7 +118,7 @@ export default function ConsentPage() {
       const input: GrantInput = {
         subjectPseudonym,
         viewer,
-        attester: PLATFORM_ATTESTER,
+        attester: activeAttester,
         eventTypes: selectedTypes.length > 0 ? selectedTypes : ["GIG_PAYOUT"],
         expiry: expiryTs,
       };

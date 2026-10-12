@@ -132,13 +132,32 @@ export default function MyRecordPage() {
   const [revoking, setRevoking] = useState<(SavedGrant & { live: boolean | null }) | null>(null);
 
   const { address } = useEmbeddedWallet();
-  const pseudonym = address ? pseudonymFor(address, PLATFORM_ATTESTER) : null;
+  // A borrower's record can be attested by the platform OR by any bonded
+  // attester they've dealt with — including their own attester wallet when
+  // solo-testing. Query both keys so neither case is invisible.
+  const pseudonyms = address
+    ? [pseudonymFor(address, PLATFORM_ATTESTER), pseudonymFor(address, address)]
+    : [];
+  const primaryPseudonym = pseudonyms[0] ?? null;
 
   const refresh = useCallback(async () => {
-    if (!pseudonym) return;
+    if (pseudonyms.length === 0) return;
     try {
-      const res = await apiFetch<{ attestations: LiveAttestation[] }>(`/api/subjects/${pseudonym}/attestations`);
-      setAttestations(res.attestations ?? []);
+      const perKey = await Promise.all(
+        pseudonyms.map(async (p) => {
+          const res = await apiFetch<{ attestations: LiveAttestation[] }>(`/api/subjects/${p}/attestations`);
+          return res.attestations ?? [];
+        }),
+      );
+      const seen = new Set<number>();
+      const merged: LiveAttestation[] = [];
+      for (const list of perKey) {
+        for (const a of list) {
+          if (!seen.has(a.id)) { seen.add(a.id); merged.push(a); }
+        }
+      }
+      merged.sort((x, y) => y.id - x.id);
+      setAttestations(merged);
       setApiDown(false);
     } catch {
       setAttestations(null);
@@ -148,14 +167,14 @@ export default function MyRecordPage() {
     const checked = await Promise.all(
       saved.map(async (g) => {
         try {
-          return { ...g, live: await hasLiveGrant(pseudonym, g.viewer as Address) };
+          return { ...g, live: primaryPseudonym ? await hasLiveGrant(primaryPseudonym, g.viewer as Address) : null };
         } catch {
-          return { ...g, live: null as boolean | null };
+          return { ...g, live: null };
         }
       }),
     );
     setGrants(checked);
-  }, [pseudonym]);
+  }, [pseudonyms.join(","), primaryPseudonym]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -301,10 +320,10 @@ export default function MyRecordPage() {
         </div>
       </div>
 
-      {revoking && pseudonym && (
+      {revoking && primaryPseudonym && (
         <RevokeModal
           grant={revoking}
-          pseudonym={pseudonym}
+          pseudonym={primaryPseudonym}
           onClose={() => setRevoking(null)}
           onRevoked={refresh}
         />
