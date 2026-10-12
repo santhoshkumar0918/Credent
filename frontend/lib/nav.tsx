@@ -78,6 +78,13 @@ export const ROLE_LABELS: Record<string, string> = {
   WATCHER: "Watcher",
 };
 
+export const ROLE_HOME: Record<string, string> = {
+  SUBJECT: "/app/home",
+  ATTESTER: "/app/attester",
+  LENDER: "/app/lender",
+  WATCHER: "/app/challenge",
+};
+
 export const ROLE_COLORS: Record<string, string> = {
   SUBJECT:  "badge-tier2",
   ATTESTER: "badge-active",
@@ -88,4 +95,11 @@ export const ROLE_COLORS: Record<string, string> = {
 /** Section-active: exact match or any sub-route beneath the item. */
 export function isNavActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+/** Whether a pathname already belongs to a role’s menu (shared pages count). */
+export function roleHasRoute(role: string, pathname: string | null): boolean {
+  if (!pathname) return false;
+  const items = ROLE_NAV[role] ?? [];
+  return items.some((item) => isNavActive(pathname, item.href));
 }

@@ -1,19 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
-import { useRole } from "@/lib/role-context";
+import { useRole, type Role } from "@/lib/role-context";
 import { useWalletAddress } from "@/lib/wallet";
-import { ROLE_NAV, ROLE_LABELS, ROLE_COLORS, Icon, isNavActive } from "@/lib/nav";
+import { ROLE_NAV, ROLE_LABELS, ROLE_COLORS, ROLE_HOME, Icon, isNavActive, roleHasRoute } from "@/lib/nav";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { role, setRole, allRoles, logoutAndClear } = useRole();
   const { authenticated } = usePrivy();
   const address = useWalletAddress();
 
   const currentNav = ROLE_NAV[role] ?? ROLE_NAV.SUBJECT;
+
+  function handleRoleChange(next: Role) {
+    setRole(next);
+    // Role state alone does not change the route: if the current page is not
+    // in the newly selected role’s menu, navigate to that role’s landing page.
+    if (!roleHasRoute(next, pathname)) {
+      router.push(ROLE_HOME[next] ?? "/app/home");
+    }
+  }
 
   function shortAddress(addr: string | null) {
     if (!addr) return "creating…";
@@ -26,7 +36,7 @@ export function Sidebar() {
     <aside className="sidebar">
       {/* Logo */}
       <div className="sidebar-logo">
-        <Link href="/app/home" style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <Link href={ROLE_HOME[role] ?? "/app/home"} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
           <div
             style={{
               width: 32,
@@ -45,7 +55,7 @@ export function Sidebar() {
             V
           </div>
           <span style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "1.2rem", letterSpacing: "-0.01em" }}>
-            Vouchain
+            Credent
           </span>
         </Link>
       </div>
@@ -74,7 +84,7 @@ export function Sidebar() {
               {allRoles.map((r) => (
                 <button
                   key={r}
-                  onClick={() => setRole(r)}
+                  onClick={() => handleRoleChange(r)}
                   className={`sidebar-item${role === r ? " active" : ""}`}
                   style={{ width: "100%", textAlign: "left", cursor: "pointer" }}
                 >
