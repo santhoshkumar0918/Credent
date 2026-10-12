@@ -31,7 +31,7 @@ export default function HowItWorksPage() {
           End-to-End Workflow
         </span>
         <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "2.25rem", fontWeight: 500, letterSpacing: "-0.01em" }}>
-          How Vouchain Works
+          How Credent Works
         </h1>
         <p style={{ color: "var(--vc-text-secondary)", fontSize: "1.05rem", marginTop: "0.5rem" }}>
           From informal payment behavior to portable, proof-gated credit identity.

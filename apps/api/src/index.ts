@@ -34,7 +34,7 @@ async function start() {
 
   // Health Check
   app.get("/health", async () => {
-    return { status: "ok", service: "Vouchain API", timestamp: new Date().toISOString() };
+    return { status: "ok", service: "Credent API", timestamp: new Date().toISOString() };
   });
 
   // Register API Routes

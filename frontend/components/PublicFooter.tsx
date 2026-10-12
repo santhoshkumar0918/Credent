@@ -13,7 +13,7 @@ export function PublicFooter() {
     >
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <span style={{ fontWeight: 700, color: "var(--vc-text-primary)", marginRight: "0.5rem" }}>Vouchain</span>
+          <span style={{ fontWeight: 700, color: "var(--vc-text-primary)", marginRight: "0.5rem" }}>Credent</span>
           © 2026 — Open Credit Evidence Layer on Monad.
         </div>
         <div style={{ display: "flex", gap: "1.5rem" }}>

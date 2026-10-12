@@ -17,7 +17,7 @@ test.describe("Public site", () => {
 
   test("how-it-works tells the honest lifecycle", async ({ page }) => {
     await page.goto(`${BASE}/how-it-works`);
-    await expect(page.getByText("How Vouchain Works")).toBeVisible();
+    await expect(page.getByText("How Credent Works")).toBeVisible();
     await expect(page.getByText("Repay in Full, Grow the Record")).toBeVisible();
     await expect(page.getByText(/never fakes|sealed/i).first()).toBeVisible();
   });
@@ -47,7 +47,7 @@ test.describe("Auth gates", () => {
   test("gated routes bounce to login when signed out", async ({ page }) => {
     await page.goto(`${BASE}/app/home`);
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByRole("heading", { name: "Sign in to Vouchain" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sign in to Credent" })).toBeVisible();
   });
 
   test("login offers passkey/phone", async ({ page }) => {

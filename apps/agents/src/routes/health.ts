@@ -6,7 +6,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
   fastify.get("/health", async () => {
     return {
       status: "ok",
-      service: "Vouchain Autonomous Agents",
+      service: "Credent Autonomous Agents",
       timestamp: new Date().toISOString(),
     };
   });
@@ -23,7 +23,7 @@ export async function healthRoutes(fastify: FastifyInstance) {
     }
 
     return {
-      service: "Vouchain Agents (Member 3)",
+      service: "Credent Agents (Member 3)",
       chainId: config.chainId,
       rpcConnected,
       latestBlock: blockNumber ? blockNumber.toString() : null,

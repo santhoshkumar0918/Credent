@@ -49,7 +49,7 @@ export function PublicNavbar() {
             V
           </div>
           <span style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "1.25rem", color: "var(--vc-text-primary)" }}>
-            Vouchain
+            Credent
           </span>
       </Link>
 

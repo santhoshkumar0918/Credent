@@ -32,7 +32,7 @@ export function buildNotificationMessage(event: NotificationEventType, data?: Re
   switch (event) {
     case "LIMIT_INCREASED":
       const limit = data?.limit ? `₹${data.limit.toLocaleString("en-IN")}` : "₹3,000";
-      return `🎉 Great news! Your credit limit increased to ${limit} based on your verified on-time record on Vouchain.`;
+      return `🎉 Great news! Your credit limit increased to ${limit} based on your verified on-time record on Credent.`;
 
     case "ACCESS_REQUESTED":
       const lender = data?.lender || "MicroLend Protocol";
@@ -51,7 +51,7 @@ export function buildNotificationMessage(event: NotificationEventType, data?: Re
 
     case "CUSTOM":
     default:
-      return data?.message || "Vouchain notification";
+      return data?.message || "Credent notification";
   }
 }
 

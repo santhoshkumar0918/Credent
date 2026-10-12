@@ -23,11 +23,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vouchain — Open credit-evidence layer on Monad",
+  title: "Credent — Open credit-evidence layer on Monad",
   description:
     "Portable, source-proven credit attestations for people the credit system cannot see. Built on Monad.",
   openGraph: {
-    title: "Vouchain",
+    title: "Credent",
     description: "Open on-chain credit evidence for the underbanked",
     type: "website",
   },

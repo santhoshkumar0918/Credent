@@ -45,7 +45,7 @@ function LoginContent() {
         </div>
 
         <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", fontWeight: 500, marginBottom: "0.5rem" }}>
-          Sign in to Vouchain
+          Sign in to Credent
         </h1>
         <p style={{ fontSize: "0.88rem", color: "var(--vc-text-secondary)", marginBottom: "2rem" }}>
           Login with your passkey, phone OTP, or email. No seed phrases or crypto wallets required.

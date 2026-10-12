@@ -67,7 +67,7 @@ export default function OnboardingPage() {
       // console re-syncs on first load. Never block onboarding on this.
     }
     setOnboarded(true);
-    toast.success("Welcome to Vouchain — your wallet is ready.");
+    toast.success("Welcome to Credent — your wallet is ready.");
     setLoading(false);
     router.push(roleHome(selectedRole));
   }
@@ -89,7 +89,7 @@ export default function OnboardingPage() {
           Step {step} of 4
         </span>
         <h1 style={{ fontSize: "1.6rem", fontWeight: 500 }}>
-          {step === 1 && "How will you use Vouchain?"}
+          {step === 1 && "How will you use Credent?"}
           {step === 2 && "Your verified identity"}
           {step === 3 && "Your wallet is ready"}
           {step === 4 && "One last preference"}

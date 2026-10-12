@@ -61,7 +61,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
           </div>
           <div className="skeleton" style={{ width: 140, height: 8, borderRadius: 4, margin: "0 auto" }} />
           <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "var(--vc-text-muted)" }}>
-            Authenticating Vouchain Session...
+            Authenticating Credent Session...
           </p>
         </div>
       </div>

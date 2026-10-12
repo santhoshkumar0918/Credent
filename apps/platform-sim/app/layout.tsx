@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "SwiftDeliver Pilot Platform — Gig Operator & Payout Simulator",
-  description: "Pilot gig-platform operator app for Vouchain attestation testing.",
+  description: "Pilot gig-platform operator app for Credent attestation testing.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

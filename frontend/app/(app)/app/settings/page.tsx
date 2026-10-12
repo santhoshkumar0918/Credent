@@ -41,7 +41,7 @@ export default function SettingsPage() {
             Account & System Settings
           </h1>
           <p style={{ color: "var(--vc-text-secondary)", fontSize: "0.9rem" }}>
-            Manage your Vouchain identity, system health status, and wallet roles.
+            Manage your Credent identity, system health status, and wallet roles.
           </p>
         </div>
         <SystemHealthBadge />
@@ -112,7 +112,7 @@ export default function SettingsPage() {
           className="btn btn-outline btn-md"
           style={{ color: "var(--vc-danger)", borderColor: "var(--vc-danger)", cursor: "pointer" }}
         >
-          Sign Out of Vouchain
+          Sign Out of Credent
         </button>
       </div>
       </div>
