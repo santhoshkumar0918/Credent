@@ -1,5 +1,7 @@
 import { createWalletClient, createPublicClient, http, hexToBytes, type Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { ADDRESSES } from "../../../../shared/src/constants";
+import { consentRegistryAbi } from "../../../../shared/src/abis/ConsentRegistry";
 
 const MONAD_TESTNET_RPC = process.env.MONAD_RPC_URL || "https://testnet-rpc.monad.xyz";
 
@@ -27,6 +29,11 @@ export const walletClient = createWalletClient({
   transport: http(MONAD_TESTNET_RPC),
 });
 
+// Only the deployed ConsentRegistry may be relayed. The ABI below is the
+// canonical deployed ABI from `shared/`; a local fragment previously drifted
+// from the chain and caused unbroadcastable submissions.
+const DEPLOYED_CONSENT = ADDRESSES.consentRegistry;
+
 // Function selector allowlist for Monad gas relayer (relays gasless consent grants/revocations ONLY)
 // Note: openChallenge requires a 0.5 MON challenger bond deposit and MUST NOT be relayed.
 const ALLOWED_FUNCTION_SELECTORS = new Set<string>([
@@ -43,32 +50,15 @@ export interface RelayerSubmissionRequest {
 
 export async function submitRelayedTransaction(req: RelayerSubmissionRequest): Promise<{ txHash: Hex; blockNumber?: bigint }> {
   if (!ALLOWED_FUNCTION_SELECTORS.has(req.functionName)) {
-    throw new Error(`Function '${req.functionName}' is not allowed by Vouchain gas relayer policy.`);
+    throw new Error(`Function '${req.functionName}' is not allowed by Credent gas relayer policy.`);
+  }
+  if (req.targetContract.toLowerCase() !== DEPLOYED_CONSENT.toLowerCase()) {
+    throw new Error("Relayer policy allows only the deployed ConsentRegistry.");
   }
 
-  // Contract ABI fragments for allowlisted calls
-  const consentAbi = [
-    {
-      name: "grantAccess",
-      type: "function",
-      stateMutability: "nonpayable",
-      inputs: [
-        { name: "subject", type: "address" },
-        { name: "attester", type: "address" },
-        { name: "scopeTags", type: "bytes32[]" },
-        { name: "expiry", type: "uint256" },
-        { name: "signature", type: "bytes" },
-      ],
-      outputs: [],
-    },
-    {
-      name: "revokeAccess",
-      type: "function",
-      stateMutability: "nonpayable",
-      inputs: [{ name: "grantId", type: "bytes32" }],
-      outputs: [],
-    },
-  ] as const;
+  // Canonical deployed ConsentRegistry ABI. Do not replace with a local
+  // fragment: argument-count drift here previously produced fake receipts.
+  const consentAbi = consentRegistryAbi;
 
   try {
     // 1. Simulate contract call first via eth_call
@@ -87,12 +77,13 @@ export async function submitRelayedTransaction(req: RelayerSubmissionRequest): P
       functionName: req.functionName as any,
       args: req.args as any,
     });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash });
 
-    return { txHash: hash };
+    return { txHash: hash, blockNumber: receipt.blockNumber };
   } catch (err: any) {
     console.error("Relayer transaction simulation or execution error:", err);
-    // Return mock successful tx hash in offline/test mode if RPC connection fails
-    const mockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("")}` as Hex;
-    return { txHash: mockHash };
+    // Never return a mock hash: an unbroadcast transaction must surface as an
+    // error so the frontend can use its direct-wallet fallback honestly.
+    throw new Error(`Relayer broadcast failed: ${err?.shortMessage ?? err?.message ?? err}`);
   }
 }
