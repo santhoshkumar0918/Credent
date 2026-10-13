@@ -30,10 +30,10 @@ export function PublicNavbar() {
         zIndex: 50,
       }}
     >
-      <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <img src="/logo.jpeg" alt="Credent" width={36} height={36} style={{ borderRadius: 10 }} />
+      <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}>
+          <img src="/logo.jpeg" alt="C" width={36} height={36} style={{ borderRadius: 10 }} />
           <span style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "1.25rem", color: "var(--vc-text-primary)" }}>
-            Credent
+            redent
           </span>
       </Link>
 

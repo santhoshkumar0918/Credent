@@ -54,10 +54,10 @@ export function Sidebar() {
     <aside className="sidebar">
       {/* Logo */}
       <div className="sidebar-logo">
-        <Link href={ROLE_HOME[role] ?? "/app/home"} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <img src="/logo.jpeg" alt="Credent" width={32} height={32} style={{ borderRadius: 10 }} />
+        <Link href={ROLE_HOME[role] ?? "/app/home"} style={{ display: "flex", alignItems: "center", gap: "0.15rem" }}>
+          <img src="/logo.jpeg" alt="C" width={32} height={32} style={{ borderRadius: 10 }} />
           <span style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "1.2rem", letterSpacing: "-0.01em" }}>
-            Credent
+            redent
           </span>
         </Link>
       </div>
