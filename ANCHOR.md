@@ -123,7 +123,19 @@ Autonomous Agents Track (Member 3) — COMPLETE:
 - 22/22 monorepo unit tests passing green.
 
 ## In progress right now
-Live solo test continuing; all three fix-pack tickets verified and closed.
+Rehearsal pool deployed and wired; borrow loop ready for the live run.
+
+- Rehearsal MockLendingPool `0x560014e806162a3a3e96e4340b43bf1498843242`
+  (deployed Oct 13 via `contracts/script/DeployRehearsalPool.s.sol`, owner =
+  platform wallet `0xDCBd…`, MIN_SCORE = 0, Sourcify exact-match verified,
+  nextLoanId = 0, balance 0). Trust spine untouched: registries, consent,
+  challenge, and the score formula are byte-identical in behavior.
+- Old pool `0xf2e79a…` retired with 4 MON locked inside (no withdraw function;
+  disclosed, not recoverable). New pool needs funding + a fresh underwriting
+  before originate works.
+- forge 55/55 green (gate test rewritten for rehearsal semantics).
+- Next: user funds new pool → re-records underwriting → operator originates →
+  user repays → record grows.
 
 - Grant VERIFIED live: tx `0x8d16b08cfcc61ab0d5d72ba395f22b7e379804572ff45a2cbffcc8c04460444b`
   (direct wallet write, Status Success, AccessGranted for `you × you` pair).
