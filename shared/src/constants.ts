@@ -22,5 +22,5 @@ export const ADDRESSES: {
   attestationRegistry: "0x7fceaa85c5f74d54554bffd46a41653fd03da962",
   consentRegistry: "0x6f47a618213d44afdaeb605e3262e2f874471b74",
   challengeModule: "0xd7ca8042c236b9c29cbac8c192100825f5969a0d",
-  mockLendingPool: "0xf2e79aa5f3344992fca9f4ff5a4736716114e0d7",
+  mockLendingPool: "0x560014e806162a3a3e96e4340b43bf1498843242",
 };
