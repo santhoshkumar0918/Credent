@@ -1,7 +1,16 @@
-# Vouchain (Credent)
+# Credent
 
 **A permissionless, on-chain credit-attestation layer that turns real-world
 payment behavior into portable, user-owned credit identity — built on Monad.**
+
+```mermaid
+flowchart LR
+    A["1 · Witness signs<br/>bonded attester · AttesterRegistry"] --> B["2 · Chain seals<br/>commitment hash · AttestationRegistry"]
+    B --> C["3 · Subject grants<br/>scoped EIP-712 · ConsentRegistry"]
+    C --> D["4 · Lender re-verifies<br/>hashes recomputed client-side"]
+    D --> E["5 · Pool lends<br/>underwrite → originate → repay"]
+    E --> F["6 · Lies get slashed<br/>bond → arbiter → slash + claim"]
+```
 
 Billions of people pay rent, repay informal loans, and earn gig income on
 time, every time — and none of it counts toward any credit score anywhere.
