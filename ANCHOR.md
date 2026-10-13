@@ -142,6 +142,11 @@ Rehearsal pool deployed and wired; borrow loop ready for the live run.
   contract-generated and unknowable, so that attestation is record-only, never
   disclosable. Pool bonding runbook: fund pool ≥5+loan FIRST, then call
   `registerAsAttester()` with NO value (it is non-payable; forwards pool balance).
+- DEMO OPERATOR CONSOLE (Oct 13): `POST /api/operator/originate` + `/resolve`
+  in `apps/api/src/routes/operator.ts` (OPERATOR_ENABLED=true + server-held keys,
+  simulate-first, honest errors; UI: pool originate card + per-dispute arbiter
+  buttons, demo-gated). Chain still enforces onlyOwner/onlyArbiter. Live-tested:
+  resolve on closed challenge #2 returns honest 400 (proves arbiter key + wiring).
 
 - Grant VERIFIED live: tx `0x8d16b08cfcc61ab0d5d72ba395f22b7e379804572ff45a2cbffcc8c04460444b`
   (direct wallet write, Status Success, AccessGranted for `you × you` pair).
