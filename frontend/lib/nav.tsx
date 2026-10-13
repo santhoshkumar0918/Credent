@@ -46,6 +46,7 @@ const BORROWER_NAV: NavItem[] = [
 const ATTESTER_NAV: NavItem[] = [
   { href: "/app/attester",      label: "Dashboard",     icon: "attester" },
   { href: "/explorer",          label: "Explorer",      icon: "explorer" },
+  { href: "/app/challenge",     label: "Challenges",    icon: "challenge" },
   { href: "/app/notifications", label: "Notifications", icon: "notify" },
   { href: "/app/settings",      label: "Settings",      icon: "settings" },
 ];
@@ -53,6 +54,7 @@ const ATTESTER_NAV: NavItem[] = [
 const LENDER_NAV: NavItem[] = [
   { href: "/app/lender",        label: "Requests",      icon: "lender" },
   { href: "/app/pool",          label: "Pool",          icon: "pool" },
+  { href: "/app/challenge",     label: "Challenges",    icon: "challenge" },
   { href: "/explorer",          label: "Explorer",      icon: "explorer" },
   { href: "/app/notifications", label: "Notifications", icon: "notify" },
   { href: "/app/settings",      label: "Settings",      icon: "settings" },
