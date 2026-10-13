@@ -65,7 +65,7 @@ export default function PoolPage() {
       <div className="page-header">
         <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", marginBottom: "0.4rem" }}>
           <p className="eyebrow">Lender · Pool</p>
-          <span className="badge badge-demo">demo pool · testnet MON</span>
+          <span className="badge badge-demo">rehearsal pool · origination gate open · testnet MON</span>
         </div>
         <h1 style={{ fontSize: "1.8rem", marginBottom: "0.35rem" }}>Lending pool</h1>
         <p style={{ color: "var(--vc-text-secondary)", fontSize: "0.9rem" }}>
@@ -160,7 +160,9 @@ export default function PoolPage() {
         <div className="card" style={{ background: "var(--vc-success-dim)", borderColor: "rgba(14,107,62,0.25)" }}>
           <p style={{ fontSize: "0.83rem", color: "var(--vc-text-secondary)", lineHeight: 1.65 }}>
             <strong>Honest scope:</strong> fund → underwrite → originate → repay. That is the whole
-            contract — no tranches, no reserve, no waterfall. Anything beyond that is roadmap, not demo.
+            contract — no tranches, no reserve, no waterfall. This rehearsal pool originates at any
+            recorded score (gate open) so the loop is testable on fresh records; production lenders
+            set their own thresholds. Your recorded score stays truthful either way.
           </p>
         </div>
       </div>
