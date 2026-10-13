@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useRef } from "react";
+
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { Icon } from "@/lib/nav";
@@ -14,21 +16,42 @@ const EXHIBIT = {
   tx: "0x494cb870bcdd59352f9eca0ea8146a6af143ceda1e23bd6d452fcccf68a2448f",
 };
 
-const SEQUENCE = [
+const FLOW_STEPS = [
   {
     n: "01",
     title: "A witness signs",
-    desc: "The party who was actually there — landlord, gig platform, lender — signs what it saw. Its bond backs every word.",
+    desc: "The bonded attester who was actually there signs the payment it saw. Its bond backs every word.",
+    contract: "AttesterRegistry",
   },
   {
     n: "02",
     title: "The chain seals it",
-    desc: "Only a commitment hash lands on-chain. Amounts and outcomes stay sealed until you choose to reveal them.",
+    desc: "Only a commitment hash lands on-chain. Amounts and outcomes stay sealed — plaintext nowhere.",
+    contract: "AttestationRegistry",
   },
   {
     n: "03",
-    title: "A lender re-verifies",
-    desc: "Under your scoped, expiring grant, the lender recomputes every hash itself. No trust in us required.",
+    title: "The subject grants",
+    desc: "You sign a scoped, expiring EIP-712 grant for one viewer. Revoke anytime; revocation is immediate.",
+    contract: "ConsentRegistry",
+  },
+  {
+    n: "04",
+    title: "The lender re-verifies",
+    desc: "Every hash is recomputed in the browser and compared on-chain. A mismatch rejects the disclosure.",
+    contract: "client-side",
+  },
+  {
+    n: "05",
+    title: "The pool lends",
+    desc: "Underwrite from verified numbers → originate → repay. Each repayment mints new attested evidence.",
+    contract: "MockLendingPool",
+  },
+  {
+    n: "06",
+    title: "Lies get slashed",
+    desc: "A relying party posts a bond, proves the lie, the arbiter resolves — slash, reputation cut, winner claims.",
+    contract: "ChallengeModule",
   },
 ];
 
@@ -61,6 +84,23 @@ function short(hex: string) {
 
 export default function LandingPage() {
   const { login, authenticated } = usePrivy();
+  const [flowStep, setFlowStep] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  function goStep(next: number) {
+    const clamped = Math.max(0, Math.min(FLOW_STEPS.length - 1, next));
+    setFlowStep(clamped);
+    const track = trackRef.current;
+    const card = track?.children[clamped] as HTMLElement | undefined;
+    if (track && card) {
+      const reduce = typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      track.scrollTo({
+        left: card.offsetLeft - track.clientWidth / 2 + card.clientWidth / 2,
+        behavior: reduce ? "auto" : "smooth",
+      });
+    }
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -167,7 +207,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Sequence — how evidence moves. Numbered because order is the information. */}
+      {/* Interactive protocol flow — the demo narrator clicks through left to right.
+          Active step is lit, the rest sit dull. Replaces the old static strip. */}
       <section
         style={{
           borderTop: "1px solid var(--vc-border)",
@@ -177,23 +218,97 @@ export default function LandingPage() {
         }}
       >
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-          <p className="eyebrow" style={{ marginBottom: "0.6rem" }}>How evidence moves</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "1rem", flexWrap: "wrap", marginBottom: "0.4rem" }}>
+            <div>
+              <p className="eyebrow" style={{ marginBottom: "0.6rem" }}>Protocol flow · narrate the demo</p>
+              <h2 className="serif" style={{ fontSize: "1.6rem" }}>
+                Six moves, one trust spine
+              </h2>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <span className="mono" style={{ fontSize: "0.75rem", color: "var(--vc-text-muted)" }}>
+                {flowStep + 1} / {FLOW_STEPS.length}
+              </span>
+              <button
+                className="btn btn-outline btn-sm" aria-label="Previous step"
+                onClick={() => goStep(flowStep - 1)} disabled={flowStep === 0}
+                style={{ opacity: flowStep === 0 ? 0.4 : 1, cursor: flowStep === 0 ? "default" : "pointer" }}
+              >
+                ←
+              </button>
+              <button
+                className="btn btn-primary btn-sm" aria-label="Next step"
+                onClick={() => goStep(flowStep + 1)} disabled={flowStep === FLOW_STEPS.length - 1}
+                style={{ opacity: flowStep === FLOW_STEPS.length - 1 ? 0.4 : 1, cursor: flowStep === FLOW_STEPS.length - 1 ? "default" : "pointer" }}
+              >
+                →
+              </button>
+            </div>
+          </div>
           <div
+            ref={trackRef}
+            className="stagger"
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "2rem",
+              gridAutoFlow: "column",
+              gridAutoColumns: "minmax(230px, 1fr)",
+              gap: "1rem",
               marginTop: "1.5rem",
+              overflowX: "auto",
+              paddingBottom: "0.5rem",
+              scrollSnapType: "x proximity",
             }}
           >
-            {SEQUENCE.map((s) => (
-              <div key={s.n}>
-                <div className="mono" style={{ fontSize: "0.8rem", color: "var(--vc-violet)", marginBottom: "0.5rem" }}>
-                  {s.n}
-                </div>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: 600, marginBottom: "0.4rem" }}>{s.title}</h3>
-                <p style={{ fontSize: "0.87rem", color: "var(--vc-text-secondary)", lineHeight: 1.65 }}>{s.desc}</p>
-              </div>
+            {FLOW_STEPS.map((s, i) => {
+              const active = i === flowStep;
+              const done = i < flowStep;
+              return (
+                <button
+                  key={s.n}
+                  onClick={() => goStep(i)}
+                  aria-label={`Flow step ${i + 1}: ${s.title}`}
+                  style={{
+                    all: "unset",
+                    boxSizing: "border-box",
+                    display: "block",
+                    cursor: "pointer",
+                    scrollSnapAlign: "center",
+                    textAlign: "left",
+                    background: active ? "var(--vc-surface-1)" : "transparent",
+                    border: active
+                      ? "2px solid var(--vc-violet)"
+                      : "1px solid var(--vc-border)",
+                    borderRadius: "var(--radius-md)",
+                    padding: "1.25rem",
+                    opacity: active ? 1 : 0.45,
+                    transition: "opacity 0.25s var(--ease-out), border-color 0.25s var(--ease-out), background 0.25s var(--ease-out)",
+                  }}
+                >
+                  <div className="mono" style={{
+                    fontSize: "0.8rem", marginBottom: "0.5rem",
+                    color: done ? "var(--vc-success)" : active ? "var(--vc-violet)" : "var(--vc-text-muted)",
+                  }}>
+                    {done ? "✓ " : ""}{s.n}
+                  </div>
+                  <h3 style={{ fontSize: "1.02rem", fontWeight: 600, marginBottom: "0.4rem" }}>{s.title}</h3>
+                  <p style={{ fontSize: "0.83rem", color: "var(--vc-text-secondary)", lineHeight: 1.6, marginBottom: "0.6rem" }}>{s.desc}</p>
+                  <span className="mono" style={{ fontSize: "0.68rem", color: "var(--vc-text-muted)" }}>{s.contract}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.25rem", alignItems: "center" }}>
+            {FLOW_STEPS.map((s, i) => (
+              <button
+                key={s.n}
+                onClick={() => goStep(i)}
+                aria-label={`Go to step ${i + 1}`}
+                style={{
+                  all: "unset", cursor: "pointer", height: 6, flex: 1, borderRadius: 999,
+                  background: i <= flowStep ? "var(--vc-violet)" : "var(--vc-border-strong)",
+                  transition: "background 0.25s var(--ease-out)",
+                }}
+              />
             ))}
           </div>
         </div>
