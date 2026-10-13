@@ -6,13 +6,39 @@
  * change only this file.
  */
 import { usePrivy, useWallets, type ConnectedWallet } from "@privy-io/react-auth";
-import { createWalletClient, custom, type Address, type Hex, type WalletClient } from "viem";
+import { useEffect, useState } from "react";
+import { createWalletClient, custom, formatEther, type Address, type Hex, type WalletClient } from "viem";
 import { monadTestnet } from "./wagmi";
+import { getPublicClient } from "./contracts";
 
 export function useWalletAddress(): Address | null {
   const { wallets } = useWallets();
   const embedded = wallets.find((w) => w.walletClientType === "privy");
   return (embedded?.address as Address) ?? null;
+}
+
+/** Live native MON balance of the embedded wallet.
+ *  `undefined` = still loading, `null` = unavailable (RPC down / no wallet).
+ *  Refreshes every 30s so post-tx balances catch up without a reload. */
+export function useWalletBalance(): string | null | undefined {
+  const address = useWalletAddress();
+  const [balance, setBalance] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (!address) { setBalance(null); return; }
+    let cancelled = false;
+    async function load() {
+      try {
+        const wei = await getPublicClient().getBalance({ address: address as Address });
+        if (!cancelled) setBalance(formatEther(wei));
+      } catch {
+        if (!cancelled) setBalance(null);
+      }
+    }
+    load();
+    const id = setInterval(load, 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [address]);
+  return balance;
 }
 
 /** The embedded wallet itself (null until Privy provisions it). */

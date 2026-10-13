@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRole, type Role } from "@/lib/role-context";
-import { useWalletAddress } from "@/lib/wallet";
+import { useWalletAddress, useWalletBalance } from "@/lib/wallet";
+import toast from "react-hot-toast";
 import { ROLE_NAV, ROLE_LABELS, ROLE_COLORS, ROLE_HOME, Icon, isNavActive, roleHasRoute } from "@/lib/nav";
 
 export function Sidebar() {
@@ -13,6 +14,18 @@ export function Sidebar() {
   const { role, setRole, allRoles, logoutAndClear } = useRole();
   const { authenticated } = usePrivy();
   const address = useWalletAddress();
+  const balance = useWalletBalance();
+
+  function copyAddress() {
+    if (!address) return;
+    navigator.clipboard?.writeText(address).then(
+      () => toast.success("Wallet address copied."),
+      () => toast.error("Copy failed — select manually."),
+    );
+  }
+
+  const balanceText =
+    balance === undefined ? "…" : balance === null ? "balance offline" : `${trimMon(balance)} MON`;
 
   const currentNav = ROLE_NAV[role] ?? ROLE_NAV.SUBJECT;
 
@@ -28,6 +41,11 @@ export function Sidebar() {
   function shortAddress(addr: string | null) {
     if (!addr) return "creating…";
     return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+  }
+
+  function trimMon(wei: string) {
+    const dot = wei.indexOf(".");
+    return dot === -1 ? wei : wei.slice(0, dot + 5);
   }
 
   const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
@@ -111,8 +129,20 @@ export function Sidebar() {
             <div style={{ fontSize: "0.72rem", color: "var(--vc-text-muted)", marginBottom: "0.25rem" }}>
               Connected Wallet
             </div>
-            <div className="mono" style={{ fontSize: "0.8rem", color: "var(--vc-text-secondary)" }}>
-              {shortAddress(address)}
+            <button
+              onClick={copyAddress}
+              title={address ?? "Wallet provisioning…"}
+              disabled={!address}
+              className="mono"
+              style={{
+                fontSize: "0.8rem", color: "var(--vc-text-secondary)", cursor: address ? "pointer" : "default",
+                background: "none", border: "none", padding: 0, textAlign: "left", width: "100%",
+              }}
+            >
+              {shortAddress(address)} {address ? "⧉" : ""}
+            </button>
+            <div className="mono" style={{ fontSize: "0.75rem", color: "var(--vc-text-muted)", marginTop: "0.15rem" }}>
+              {balanceText}{balance != null ? " · testnet" : ""}
             </div>
             <button
               onClick={() => logoutAndClear()}
