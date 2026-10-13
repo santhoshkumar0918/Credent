@@ -42,7 +42,11 @@ contract MockLendingPool is Ownable, ReentrancyGuard {
     }
 
     /// @notice Demo thresholds. Revisited before any real deployment.
-    uint256 public constant MIN_SCORE = 50;
+    /// REHEARSAL GATE: MIN_SCORE is 0 so the full borrow→repay loop is
+    /// exercisable on fresh testnet records (whose honest score is 0 until
+    /// ~31 days of tenure). Production lenders set their own thresholds —
+    /// this pool never decides real credit. Shown as "Rehearsal pool" in UI.
+    uint256 public constant MIN_SCORE = 0;
     uint256 public constant UNDERWRITING_VALIDITY = 30 days;
     uint256 public constant LOAN_TERM = 30 days;
 
