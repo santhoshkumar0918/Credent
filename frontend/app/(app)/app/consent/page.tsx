@@ -6,7 +6,7 @@
 // No disclosure plaintext is invented here: amounts live with the
 // attester platform, which posts envelopes after this grant lands.
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { pseudonymFor } from "@shared/commitments";
 import { useSignTypedData, useEmbeddedWallet, getEmbeddedWalletClient } from "@/lib/wallet";
@@ -18,7 +18,10 @@ import {
   submitGrant,
   explorerTxUrl,
   saveGrant,
+  loadGrants,
+  hasLiveGrant,
   type GrantInput,
+  type SavedGrant,
 } from "@/lib/consent";
 import type { Hex, Address } from "viem";
 
@@ -62,6 +65,7 @@ export default function ConsentPage() {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [txPath, setTxPath] = useState<"relayer" | "direct" | null>(null);
   const [txError, setTxError] = useState<string | null>(null);
+  const [pastGrants, setPastGrants] = useState<(SavedGrant & { live: boolean | null })[]>([]);
 
   const { wallet, address } = useEmbeddedWallet();
   const { sign } = useSignTypedData();
@@ -82,6 +86,32 @@ export default function ConsentPage() {
   // attestations and use that pair for the grant — a grant for the wrong
   // attester is useless to the lender.
   const [activeAttester, setActiveAttester] = useState<Address>(PLATFORM_ATTESTER);
+  // Past grants made in this browser, each re-checked live. The receipt card
+  // above is ephemeral (it clears when you leave); this list is the durable
+  // record — same pattern as the Activity feed.
+  const refreshPastGrants = useCallback(async () => {
+    if (!address) { setPastGrants([]); return; }
+    const pairs = [pseudonymFor(address, PLATFORM_ATTESTER), pseudonymFor(address, address)];
+    const saved = loadGrants();
+    const checked = await Promise.all(
+      saved.map(async (g) => {
+        try {
+          const states = await Promise.all(
+            pairs.map((p) => hasLiveGrant(p, g.viewer as Address).catch(() => null as boolean | null)),
+          );
+          if (states.includes(true)) return { ...g, live: true as boolean | null };
+          if (states.includes(false)) return { ...g, live: false as boolean | null };
+          return { ...g, live: null as boolean | null };
+        } catch {
+          return { ...g, live: null as boolean | null };
+        }
+      }),
+    );
+    setPastGrants(checked);
+  }, [address]);
+
+  useEffect(() => { refreshPastGrants(); }, [refreshPastGrants]);
+
   const subjectPseudonym = address ? pseudonymFor(address, activeAttester) : null;
 
   useEffect(() => {
@@ -147,6 +177,7 @@ export default function ConsentPage() {
         at: Date.now(),
       });
       setTx("done");
+      refreshPastGrants();
       toast.success(
         out.path === "relayer"
           ? "Consent granted — relayer sponsored, no gas paid."
@@ -397,6 +428,38 @@ export default function ConsentPage() {
             </div>
           )}
         </div>
+
+        {pastGrants.length > 0 && (
+          <div className="card" style={{ marginTop: "1.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+              <h2 style={{ fontSize: "1.05rem" }}>Past grants in this browser</h2>
+              <button className="btn btn-ghost btn-sm" onClick={refreshPastGrants}>Re-check live status</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {pastGrants.map((g) => (
+                <div key={g.viewer + g.at} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.75rem", flexWrap: "wrap", padding: "0.85rem 1rem", background: "var(--vc-surface-2)", borderRadius: "var(--radius-md)" }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.2rem" }}>
+                      Granted {g.viewerLabel} access
+                    </div>
+                    <div className="mono" style={{ fontSize: "0.72rem", color: "var(--vc-text-muted)", marginBottom: "0.35rem" }}>
+                      {g.viewer.slice(0, 10)}…{g.viewer.slice(-6)} · {g.eventTypes.join(", ")} · {new Date(g.at).toLocaleString()}
+                    </div>
+                    <a className="mono" style={{ fontSize: "0.72rem" }} href={explorerTxUrl(g.txHash)} target="_blank" rel="noreferrer">
+                      {g.txHash.slice(0, 18)}… ↗
+                    </a>
+                  </div>
+                  <span className={`badge ${g.live === true ? "badge-active" : g.live === false ? "badge-slashed" : "badge-challenged"}`}>
+                    {g.live === true ? "live on-chain" : g.live === false ? "ended" : "unconfirmed"}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p style={{ fontSize: "0.78rem", color: "var(--vc-text-muted)", marginTop: "1rem" }}>
+              The receipt card after signing is temporary — this list is the durable record, re-checked against the chain.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
