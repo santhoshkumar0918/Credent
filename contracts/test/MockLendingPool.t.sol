@@ -83,11 +83,13 @@ contract MockLendingPoolTest is Test {
         pool.originateLoan(PSEUDO, borrower, 1e18);
     }
 
-    function test_OriginateWeakScoreReverts() public {
-        // 1000 * 8 * 8000 / 1e7 = 6 < MIN_SCORE 50.
+    function test_OriginateWeakScoreSucceedsOnRehearsalGate() public {
+        // 1000 * 8 * 8000 / 1e7 = 6. Rehearsal gate is 0, so even a weak
+        // honest score originates — the rehearsal exercises mechanics, and
+        // the recorded score stays truthful for the audience to inspect.
         pool.requestUnderwriting(PSEUDO, 1000, 365, 4, 5);
-        vm.expectRevert(MockLendingPool.UnderwritingTooWeak.selector);
-        pool.originateLoan(PSEUDO, borrower, 1e18);
+        uint256 loanId = pool.originateLoan(PSEUDO, borrower, 1e18);
+        assertEq(loanId, 0);
     }
 
     function test_OriginateStaleUnderwritingReverts() public {
