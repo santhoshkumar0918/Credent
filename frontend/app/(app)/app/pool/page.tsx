@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useEmbeddedWallet, getEmbeddedWalletClient } from "@/lib/wallet";
+import { operatorOriginate, isDemoMode } from "@/lib/api-client";
 import { fundPool, poolTxUrl } from "@/lib/pool";
 import { readPoolBook, fmtMON } from "@/lib/lender";
 
@@ -16,11 +17,16 @@ function short(hex: string) {
 }
 
 export default function PoolPage() {
-  const { wallet } = useEmbeddedWallet();
+  const { wallet, address } = useEmbeddedWallet();
   const [book, setBook] = useState<{ loans: { id: number; borrower: string; amount: bigint; dueAt: bigint; repaid: boolean }[]; balance: bigint } | null | undefined>(undefined);
   const [amount, setAmount] = useState("1");
   const [funding, setFunding] = useState(false);
   const [fundTx, setFundTx] = useState<string | null>(null);
+  const [origPseudonym, setOrigPseudonym] = useState("");
+  const [origBorrower, setOrigBorrower] = useState("");
+  const [origAmount, setOrigAmount] = useState("1");
+  const [originating, setOriginating] = useState(false);
+  const [origTx, setOrigTx] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setBook(await readPoolBook());
@@ -52,6 +58,39 @@ export default function PoolPage() {
       toast.error(/rejected|denied/i.test(msg) ? "Rejected in wallet." : msg.slice(0, 160));
     } finally {
       setFunding(false);
+    }
+  }
+
+  async function handleOriginate() {
+    if (!/^0x[0-9a-fA-F]{64}$/.test(origPseudonym.trim())) {
+      toast.error("Pseudonym must be 0x + 64 hex chars.");
+      return;
+    }
+    if (!/^0x[0-9a-fA-F]{40}$/.test(origBorrower.trim())) {
+      toast.error("Borrower must be a wallet address.");
+      return;
+    }
+    const v = parseFloat(origAmount);
+    if (!origAmount || isNaN(v) || v <= 0) {
+      toast.error("Enter a MON amount above zero.");
+      return;
+    }
+    setOriginating(true);
+    setOrigTx(null);
+    try {
+      const res = await operatorOriginate({
+        pseudonym: origPseudonym.trim(),
+        borrower: origBorrower.trim(),
+        amountMON: origAmount.trim(),
+      });
+      setOrigTx(res.txHash);
+      toast.success("Loan originated by the pool operator.");
+      await refresh();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Origination failed.";
+      toast.error(msg.slice(0, 180));
+    } finally {
+      setOriginating(false);
     }
   }
 
@@ -128,6 +167,45 @@ export default function PoolPage() {
             </a>
           )}
         </div>
+
+        {isDemoMode && (
+          <div className="card" style={{ maxWidth: 560, borderColor: "var(--vc-border-strong)" }}>
+            <div style={{ display: "flex", gap: "0.6rem", alignItems: "center", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+              <h2 style={{ fontSize: "1.05rem" }}>Originate a loan</h2>
+              <span className="badge badge-demo">operator · demo only</span>
+            </div>
+            <p style={{ fontSize: "0.82rem", color: "var(--vc-text-muted)", marginBottom: "1rem" }}>
+              Only the pool owner can originate, and only against a recorded underwriting.
+              This button calls the demo operator — the chain still enforces every check.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1rem" }}>
+              <input className="input-field mono" value={origPseudonym} onChange={(e) => setOrigPseudonym(e.target.value)}
+                placeholder="0x… borrower pseudonym (64 hex)" aria-label="Borrower pseudonym" style={{ fontSize: "0.78rem" }} />
+              <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+                <input className="input-field mono" value={origBorrower} onChange={(e) => setOrigBorrower(e.target.value)}
+                  placeholder="0x… borrower wallet" aria-label="Borrower wallet"
+                  style={{ flex: 1, minWidth: 200, fontSize: "0.78rem" }} />
+                <input className="input-field mono" value={origAmount} onChange={(e) => setOrigAmount(e.target.value)}
+                  inputMode="decimal" aria-label="Loan amount in MON" style={{ width: 110, fontSize: "0.82rem" }} />
+                <span style={{ fontSize: "0.85rem", color: "var(--vc-text-muted)", alignSelf: "center" }}>MON</span>
+              </div>
+              {!origBorrower && address && (
+                <button className="btn btn-ghost btn-sm" style={{ alignSelf: "flex-start" }}
+                  onClick={() => setOrigBorrower(address)}>
+                  Use my wallet →
+                </button>
+              )}
+            </div>
+            <button className="btn btn-secondary btn-sm" onClick={handleOriginate} disabled={originating} id="pool-originate-btn">
+              {originating ? "Originating on-chain…" : "Originate via operator"}
+            </button>
+            {origTx && (
+              <a className="btn btn-outline btn-sm" style={{ marginTop: "0.8rem", marginLeft: "0.6rem" }} href={poolTxUrl(origTx)} target="_blank" rel="noreferrer">
+                View origination on MonadScan ↗
+              </a>
+            )}
+          </div>
+        )}
 
         <div className="card">
           <h2 style={{ fontSize: "1.05rem", marginBottom: "1rem" }}>Originated loans</h2>
