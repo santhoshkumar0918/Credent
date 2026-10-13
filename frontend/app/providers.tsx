@@ -23,7 +23,7 @@ const PRIVY_CONFIG: PrivyClientConfig = {
   appearance: {
     theme: "dark",
     accentColor: "#7C3AED",
-    logo: "/vouchain-logo.svg",
+    logo: "/logo.jpeg",
   },
   loginMethods: ["passkey", "sms", "email"],
   embeddedWallets: {

@@ -29,17 +29,8 @@ const LANGUAGES = [
 
 function Mark() {
   return (
-    <div
-      style={{
-        width: 44, height: 44, borderRadius: 12,
-        background: "linear-gradient(135deg, #0E6B3E, #054F2E)",
-        margin: "0 auto 1rem", display: "flex", alignItems: "center",
-        justifyContent: "center", fontSize: "1.3rem", fontWeight: 500, color: "#FFFDF7",
-        fontFamily: "var(--font-heading)",
-      }}
-    >
-      V
-    </div>
+    <img src="/logo.jpeg" alt="Credent" width={44} height={44}
+      style={{ borderRadius: 12, margin: "0 auto 1rem", display: "block" }} />
   );
 }
 

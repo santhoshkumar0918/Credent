@@ -55,23 +55,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="sidebar-logo">
         <Link href={ROLE_HOME[role] ?? "/app/home"} style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, #0E6B3E, #054F2E)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.05rem",
-              fontWeight: 500,
-              color: "#FFFDF7",
-              fontFamily: "var(--font-heading)",
-            }}
-          >
-            V
-          </div>
+          <img src="/logo.jpeg" alt="Credent" width={32} height={32} style={{ borderRadius: 10 }} />
           <span style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "1.2rem", letterSpacing: "-0.01em" }}>
             Credent
           </span>

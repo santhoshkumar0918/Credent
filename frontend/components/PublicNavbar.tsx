@@ -31,23 +31,7 @@ export function PublicNavbar() {
       }}
     >
       <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, #0E6B3E, #054F2E)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1.2rem",
-              fontWeight: 500,
-              color: "#FFFDF7",
-              fontFamily: "var(--font-heading)",
-            }}
-          >
-            V
-          </div>
+          <img src="/logo.jpeg" alt="Credent" width={36} height={36} style={{ borderRadius: 10 }} />
           <span style={{ fontFamily: "var(--font-heading)", fontWeight: 500, fontSize: "1.25rem", color: "var(--vc-text-primary)" }}>
             Credent
           </span>

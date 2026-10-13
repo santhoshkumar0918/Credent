@@ -24,6 +24,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Credent — Open credit-evidence layer on Monad",
+  icons: { icon: "/logo.jpeg" },
   description:
     "Portable, source-proven credit attestations for people the credit system cannot see. Built on Monad.",
   openGraph: {

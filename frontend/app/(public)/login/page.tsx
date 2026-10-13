@@ -25,24 +25,8 @@ function LoginContent() {
   return (
     <div style={{ padding: "4rem 1.5rem", maxWidth: 480, margin: "0 auto", textAlign: "center" }}>
       <div className="card" style={{ padding: "2.5rem 2rem" }}>
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: "linear-gradient(135deg, #0E6B3E, #054F2E)",
-            margin: "0 auto 1.5rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1.4rem",
-            fontWeight: 500,
-            color: "#FFFDF7",
-            fontFamily: "var(--font-heading)",
-          }}
-        >
-          V
-        </div>
+        <img src="/logo.jpeg" alt="Credent" width={48} height={48}
+          style={{ borderRadius: 12, margin: "0 auto 1.5rem", display: "block" }} />
 
         <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "1.5rem", fontWeight: 500, marginBottom: "0.5rem" }}>
           Sign in to Credent
