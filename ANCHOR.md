@@ -136,6 +136,12 @@ Rehearsal pool deployed and wired; borrow loop ready for the live run.
 - forge 55/55 green (gate test rewritten for rehearsal semantics).
 - Next: user funds new pool → re-records underwriting → operator originates →
   user repays → record grows.
+- BORROW LOOP CLOSED LIVE (Oct 13): loan #0 (1 MON) originated
+  (`0xe4248ac0…`), repaid in full; attestation #6 (P2P_LOAN_REPAYMENT, pool as
+  attester, ACTIVE) minted; pool balance 1 MON. Note: #6's salt is
+  contract-generated and unknowable, so that attestation is record-only, never
+  disclosable. Pool bonding runbook: fund pool ≥5+loan FIRST, then call
+  `registerAsAttester()` with NO value (it is non-payable; forwards pool balance).
 
 - Grant VERIFIED live: tx `0x8d16b08cfcc61ab0d5d72ba395f22b7e379804572ff45a2cbffcc8c04460444b`
   (direct wallet write, Status Success, AccessGranted for `you × you` pair).
