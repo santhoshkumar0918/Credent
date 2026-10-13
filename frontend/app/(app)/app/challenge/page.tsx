@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useEmbeddedWallet, getEmbeddedWalletClient } from "@/lib/wallet";
+import { operatorResolve, isDemoMode } from "@/lib/api-client";
 import {
   CHALLENGER_BOND_MON,
   CHALLENGE_STATUS,
@@ -51,6 +52,7 @@ export default function ChallengePage() {
   const [disclosure, setDisclosure] = useState("");
   const [opening, setOpening] = useState(false);
   const [claiming, setClaiming] = useState<number | null>(null);
+  const [resolving, setResolving] = useState<number | null>(null);
   const [lastOpen, setLastOpen] = useState<{ txHash: string; challengeId: bigint | null } | null>(null);
 
   const refresh = useCallback(async () => {
@@ -112,6 +114,24 @@ export default function ChallengePage() {
       toast.error(challengeErrorCopy(e));
     } finally {
       setClaiming(null);
+    }
+  }
+
+  async function handleResolve(d: Dispute, challengerWins: boolean) {
+    setResolving(d.id);
+    try {
+      const res = await operatorResolve({ challengeId: d.id, challengerWins });
+      toast.success(
+        challengerWins
+          ? `Resolved: challenger won — attester slashed. Tx ${short(res.txHash)}`
+          : `Resolved: attester won — challenge cleared. Tx ${short(res.txHash)}`,
+      );
+      await refresh();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Resolve failed.";
+      toast.error(msg.slice(0, 180));
+    } finally {
+      setResolving(null);
     }
   }
 
@@ -222,6 +242,19 @@ export default function ChallengePage() {
                     <button className="btn btn-primary btn-sm" disabled={claiming !== null} onClick={() => handleClaim(d)} id={`claim-${d.id}`}>
                       {claiming === d.id ? "Claiming…" : "Claim winnings"}
                     </button>
+                  )}
+                  {isDemoMode && d.status === 0 && (
+                    <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center", marginTop: "0.6rem" }}>
+                      <span className="badge badge-demo">arbiter · demo only</span>
+                      <button className="btn btn-secondary btn-sm" disabled={resolving !== null}
+                        onClick={() => handleResolve(d, true)} id={`resolve-win-${d.id}`}>
+                        {resolving === d.id ? "Resolving…" : "Challenger wins"}
+                      </button>
+                      <button className="btn btn-ghost btn-sm" disabled={resolving !== null}
+                        onClick={() => handleResolve(d, false)} id={`resolve-lose-${d.id}`}>
+                        Attester wins
+                      </button>
+                    </div>
                   )}
                   {d.status !== 0 && !d.claimed && !mineClaimable(d) && (
                     <p style={{ fontSize: "0.78rem", color: "var(--vc-text-muted)" }}>Awaiting the winner's claim.</p>
