@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   description:
     "Portable, source-proven credit attestations for people the credit system cannot see. Built on Monad.",
   openGraph: {
-    title: "Credent",
+    title: "Vouchain",
     description: "Open on-chain credit evidence for the underbanked",
     type: "website",
   },

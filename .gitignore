@@ -24,3 +24,4 @@ broadcast-ledger/
 
 # Working / ticket files (AGENTS.md section 8 — state lives in ANCHOR.md, not here)
 docs/
+dump.rdb
