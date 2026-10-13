@@ -155,10 +155,10 @@ export default function ChallengePage() {
                 onChange={(e) => setAttestationId(e.target.value)} placeholder="e.g. 2" inputMode="numeric" />
             </div>
             <div>
-              <label className="input-label" htmlFor="challenge-disclosure">Disclosure you relied upon</label>
+              <label className="input-label" htmlFor="challenge-disclosure">Disclosure you relied upon — paste the attestation preimage JSON</label>
               <textarea id="challenge-disclosure" className="input-field mono" rows={3} value={disclosure}
                 onChange={(e) => setDisclosure(e.target.value)}
-                placeholder='Paste the disclosed values — the challenge stores only their hash'
+                placeholder='Paste the full preimage JSON from the attester receipt (attestationId, subjectPseudonym, amount, timestamp, salt…) — only its hash is stored on-chain'
                 style={{ fontSize: "0.78rem" }} />
               <p style={{ fontSize: "0.76rem", color: "var(--vc-text-muted)", marginTop: "0.35rem" }}>
                 Content stays off-chain; its hash becomes the audit trail.
