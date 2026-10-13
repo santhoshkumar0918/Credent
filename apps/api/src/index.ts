@@ -11,6 +11,7 @@ import { attesterRoutes } from "./routes/attesters";
 import { poolRoutes } from "./routes/pool";
 import { notifyRoutes } from "./routes/notify";
 import { demoRoutes } from "./routes/demo";
+import { operatorRoutes } from "./routes/operator";
 
 const app = Fastify({
   logger: true,
@@ -47,6 +48,7 @@ async function start() {
   await app.register(poolRoutes);
   await app.register(notifyRoutes);
   await app.register(demoRoutes);
+  await app.register(operatorRoutes);
 
   const port = Number(process.env.PORT || 3001);
   const host = process.env.HOST || "0.0.0.0";
