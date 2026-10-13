@@ -281,7 +281,7 @@ export default function LenderPage() {
                 </button>
               </div>
               <div style={{ marginTop: "1rem" }}>
-                <label className="input-label">…or paste an attester preimage</label>
+                <label className="input-label">…or paste the disclosure preimage JSON — from the attester receipt (“Copy preimage JSON”), not from a consent grant</label>
                 <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
                   <input className="input-field mono" value={preimage} onChange={(e) => setPreimage(e.target.value)}
                     placeholder='{"attestationId": "2", …}' style={{ flex: 1, minWidth: 220, fontSize: "0.75rem" }} />

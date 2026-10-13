@@ -238,6 +238,10 @@ export default function ConsentPage() {
             <p style={{ fontSize: "0.8rem", color: "var(--vc-text-muted)", marginTop: "1rem" }}>
               Revoke anytime from My Record — revocation stops new disclosures immediately.
             </p>
+            <p style={{ fontSize: "0.8rem", color: "var(--vc-text-muted)", marginTop: "0.5rem" }}>
+              Nothing to copy here: this grant only opens the door. The disclosure values (salt,
+              commitment) come from the <strong>attestation receipt</strong>, not from this grant.
+            </p>
           </div>
         </div>
       </div>
