@@ -132,3 +132,29 @@ export async function fastForwardDemoClock(cycles = 1) {
     body: JSON.stringify({ cycles }),
   });
 }
+
+const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE !== "false";
+export const isDemoMode = DEMO_MODE;
+
+/** Demo-operator originate (pool owner key held server-side, demo only). */
+export async function operatorOriginate(params: {
+  pseudonym: string;
+  borrower: string;
+  amountMON: string;
+}) {
+  return apiFetch<{ status: string; txHash: string; blockNumber: string }>("/api/operator/originate", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+/** Demo-operator resolve (arbiter key held server-side, demo only). */
+export async function operatorResolve(params: {
+  challengeId: number;
+  challengerWins: boolean;
+}) {
+  return apiFetch<{ status: string; txHash: string; blockNumber: string }>("/api/operator/resolve", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
