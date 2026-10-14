@@ -147,6 +147,13 @@ Rehearsal pool deployed and wired; borrow loop ready for the live run.
   simulate-first, honest errors; UI: pool originate card + per-dispute arbiter
   buttons, demo-gated). Chain still enforces onlyOwner/onlyArbiter. Live-tested:
   resolve on closed challenge #2 returns honest 400 (proves arbiter key + wiring).
+- AZURE PLAN (Oct 13-14, credits-safe, demo-only, delete RG after judging):
+  RG `credent1234` (Central India) + ACR created by user; `Dockerfile.api` +
+  `Dockerfile.indexer` (oven/bun) + `.dockerignore` committed; indexer
+  self-seeds demo attesters on boot (schema.sql INSERT … ON CONFLICT DO NOTHING
+  + db.ts allowlist). Postgres runs as `postgres:16-alpine` container (NO
+  managed PG, NO volume — ephemeral accepted; seed re-runs on boot). ACR SKU
+  Standard kept (~$0.66/day, delete RG kills all spend).
 
 - Grant VERIFIED live: tx `0x8d16b08cfcc61ab0d5d72ba395f22b7e379804572ff45a2cbffcc8c04460444b`
   (direct wallet write, Status Success, AccessGranted for `you × you` pair).
