@@ -59,3 +59,13 @@ CREATE TABLE IF NOT EXISTS indexer_cursor (
 
 -- Rolling migrations for existing databases (idempotent).
 ALTER TABLE attestations ADD COLUMN IF NOT EXISTS block_timestamp TIMESTAMPTZ;
+
+-- Demo bootstrap seed (idempotent): the two known bonded attesters, so a
+-- FRESH database satisfies the attestations FK even though their
+-- AttesterRegistered events predate any sync cursor (e.g. fresh cloud
+-- deploys). Safe to re-run: ON CONFLICT DO NOTHING. Executed by
+-- applySchema() on every indexer boot.
+INSERT INTO attesters (address, attester_type, bond, reputation_score, attestation_count, challenges_lost, active, updated_at) VALUES
+  ('0xdcbde073aebea2d92394d0206be5235ceb2eed2d', 'PLATFORM', 5000000000000000000, 0, 0, 0, true, now()),
+  ('0x560014e806162a3a3e96e4340b43bf1498843242', 'INSTITUTION', 5000000000000000000, 0, 0, 0, true, now())
+ON CONFLICT (address) DO NOTHING;

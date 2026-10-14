@@ -32,7 +32,11 @@ export async function applySchema(pool: Pool): Promise<void> {
       if (
         stmt.includes("CREATE TABLE") ||
         stmt.includes("CREATE INDEX") ||
-        stmt.includes("ALTER TABLE")
+        stmt.includes("ALTER TABLE") ||
+        // Idempotent seed rows (ON CONFLICT DO NOTHING) — lets a fresh
+        // database self-initialize attester rows whose registration events
+        // predate any sync cursor (e.g. fresh cloud deploys).
+        stmt.includes("INSERT INTO")
       ) {
         await client.query(stmt);
       }
