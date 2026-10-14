@@ -1,0 +1,8 @@
+FROM oven/bun:1
+WORKDIR /app
+COPY . .
+RUN bun install --frozen-lockfile
+RUN bun run --cwd apps/api build
+ENV PORT=3001
+EXPOSE 3001
+CMD ["bun", "apps/api/dist/index.js"]
