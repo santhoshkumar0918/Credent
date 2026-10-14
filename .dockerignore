@@ -1,0 +1,10 @@
+node_modules
+.git
+.next
+**/dist
+.vercel
+docs
+*.log
+dump.rdb
+.env
+.env.*
