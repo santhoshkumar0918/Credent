@@ -41,6 +41,33 @@ re-derived or lost. Every agent — builder or support — must obey:
 6. **On a `git pull`, read the pull handoff before working.** Open the
    "Latest pushed changes — read this when you pull" section at the top
    of ANCHOR.md and cross-reference it with `git log --oneline`.
+7. **Point, don't paste.** ANCHOR.md entries stay short by referencing
+   exact file paths, commit hashes, and commands — never by duplicating
+   code, logs, or long explanations. Detail lives in git history and the
+   cited files; ANCHOR.md is the index, not the archive. If a fresh agent
+   can't resume from ANCHOR.md *plus the files it points to*, the entry
+   failed — add the missing pointer, not more prose.
+8. **Every ANCHOR.md update ends with a resume checklist** — the exact
+   commands that re-verify the claimed state (e.g. `git log --oneline -5`,
+   `git status --short`, service health curls, `forge test`/`next build`
+   one-liners). Status claims must come from command output observed in
+   that session, never from memory or assumption.
+9. **Separate volatile from durable state.** Machine-local facts (what's
+   listening on which port, background PIDs, what's in a local `.env`)
+   expire between sessions — timestamp them and re-verify before trusting.
+   On-chain facts (deployed addresses, attestation counts, bond values)
+   and committed history are durable — state them plainly with the proof
+   (tx hash, `cast` output, commit hash).
+10. **Dirty state must be declared.** Run `git status --short` before
+    finishing: every uncommitted change and untracked file is either
+    committed, deleted, or listed by name in ANCHOR.md with its purpose.
+    Unlisted dirty state is invisible to the next session and counts as
+    unfinished work.
+11. **Keep ANCHOR.md a window, not an archive.** When it grows past what
+    a fresh agent can absorb in one read (~200 lines), condense settled
+    history into one line per workstream (outcome + final commit hash)
+    and keep full detail only for active/recent work. Git history holds
+    the rest.
 
 This is not paperwork; it is the mechanism that lets a fresh agent
 resume exactly where things stand with zero context loss.
